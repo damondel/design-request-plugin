@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+      <title>CXS AI Chat Request</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      color: var(--figma-color-text);
+      background: var(--figma-color-bg);
+      padding: 16px;
+    }
+
+    .header {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--figma-color-text-secondary);
+      font-size: 12px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--figma-color-bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--figma-color-border);
+    }
+
+    .section h2 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--figma-color-text);
+    }
+
+    .selection-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .selection-count {
+      background: var(--figma-color-bg-brand);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .button {
+      background: var(--figma-color-bg-brand);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.2s;
+    }
+
+    .button:hover {
+      background: var(--figma-color-bg-brand-hover);
+    }
+
+    .button:disabled {
+      background: var(--figma-color-bg-disabled);
+      cursor: not-allowed;
+    }
+
+    .button.secondary {
+      background: var(--figma-color-bg-secondary);
+      color: var(--figma-color-text);
+      border: 1px solid var(--figma-color-border);
+    }
+
+    .button.secondary:hover {
+      background: var(--figma-color-bg-hover);
+    }
+
+    .loading {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin: 16px 0;
+      color: var(--figma-color-text-secondary);
+    }
+
+    .loading.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--figma-color-border);
+      border-top: 2px solid var(--figma-color-bg-brand);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .suggestions {
+      display: none;
+    }
+
+    .suggestions.show {
+      display: block;
+    }
+
+    .suggestion-item {
+      background: var(--figma-color-bg);
+      border: 1px solid var(--figma-color-border);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .suggestion-header {
+      display: flex;
+      justify-content: between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .suggestion-type {
+      background: var(--figma-color-bg-brand);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .confidence {
+      font-size: 12px;
+      color: var(--figma-color-text-secondary);
+      margin-left: auto;
+    }
+
+    .suggestion-content {
+      margin: 8px 0;
+    }
+
+    .suggestion-text {
+      font-size: 12px;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      color: var(--figma-color-text);
+      font-style: italic;
+    }
+
+    .value-comparison {
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .value-comparison .current {
+      color: var(--figma-color-text-secondary);
+    }
+
+    .value-comparison .suggested {
+      color: var(--figma-color-bg-brand);
+      font-weight: 500;
+    }
+
+    .suggestion-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .suggestion-actions .button {
+      width: auto;
+      padding: 6px 12px;
+    }
+
+    .error-message {
+      background: #ff4757;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      margin: 16px 0;
+      font-size: 12px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .success-message {
+      background: #2ed573;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      margin: 16px 0;
+      font-size: 12px;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .config-section {
+      margin-top: 24px;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--figma-color-border);
+      border-radius: 4px;
+      background: var(--figma-color-bg);
+      color: var(--figma-color-text);
+      font-size: 12px;
+    }
+
+    .input-group input:focus, .input-group select:focus {
+      outline: none;
+      border-color: var(--figma-color-bg-brand);
+    }
+
+    .collapsed {
+      max-height: 40px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .collapsed.expanded {
+      max-height: 500px;
+    }
+
+    .collapse-header {
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--figma-color-border);
+      margin-bottom: 12px;
+    }
+
+    .collapse-icon {
+      transition: transform 0.3s ease;
+    }
+
+    .collapsed.expanded .collapse-icon {
+      transform: rotate(180deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🤖 CXS AI Chat Request</h1>
+    <p>Intelligent suggestions for your designs</p>
+  </div>
+
+  <div class="section">
+    <div class="selection-info">
+      <span>Selection:</span>
+      <span class="selection-count" id="selectionCount">0 elements</span>
+    </div>
+    
+    <button class="button" id="analyzeBtn" disabled>
+      Analyze Selection
+    </button>
+  </div>
+
+  <div class="loading" id="loadingIndicator">
+    <div class="spinner"></div>
+    <span>AI is analyzing your design...</span>
+  </div>
+
+  <div class="error-message" id="errorMessage"></div>
+  <div class="success-message" id="successMessage"></div>
+
+  <div class="suggestions" id="suggestionsContainer">
+    <div class="section">
+      <h2>AI Suggestions</h2>
+      <div id="suggestionsList"></div>
+    </div>
+  </div>
+
+  <div class="section config-section">
+    <div class="collapsed" id="configSection">
+      <div class="collapse-header" onclick="toggleConfig()">
+        <h2>Configuration</h2>
+        <span class="collapse-icon">▼</span>
+      </div>
+      
+      <div class="input-group">
+        <label for="apiEndpoint">AI API Endpoint:</label>
+        <input type="text" id="apiEndpoint" value="http://localhost:3001/api/analyze" placeholder="Enter your AI API URL">
+      </div>
+
+      <div class="input-group">
+        <label for="apiKey">API Key:</label>
+        <input type="password" id="apiKey" placeholder="Enter your API key (optional)">
+      </div>
+
+      <div class="input-group">
+        <label for="analysisType">Analysis Type:</label>
+        <select id="analysisType">
+          <option value="design-analysis">General Design Analysis</option>
+          <option value="color-suggestion">Color Optimization</option>
+          <option value="layout-optimization">Layout Optimization</option>
+        </select>
+      </div>
+
+      <button class="button secondary" onclick="saveConfig()">Save Configuration</button>
+    </div>
+  </div>
+
+  <script>
+    console.log('🚀 INLINE SCRIPT LOADING...');
+    
+    // Global state
+    let currentSuggestions = [];
+    let config = {
+      apiEndpoint: 'http://localhost:3001/api/analyze',
+      apiKey: '',
+      analysisType: 'design-analysis'
+    };
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('✅ DOM Ready - Setting up UI...');
+      
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      
+      console.log('Buttons found:', {
+        analyzeBtn: !!analyzeBtn
+      });
+
+      // Simple direct onclick handlers
+      if (analyzeBtn) {
+        analyzeBtn.onclick = function() {
+          console.log('✅ ANALYZE CLICKED!');
+          parent.postMessage({ pluginMessage: { type: 'analyze-selection' } }, '*');
+        };
+      }
+
+      console.log('✅ All button handlers attached!');
+
+      // Request initial selection data
+      parent.postMessage({ pluginMessage: { type: 'get-selection-data' } }, '*');
+    });
+
+    // Message handler
+    window.onmessage = function(event) {
+      const message = event.data.pluginMessage;
+      console.log('UI received message:', message);
+
+      switch (message.type) {
+        case 'selection-data':
+          updateSelectionInfo(message.data);
+          break;
+        case 'analysis-started':
+          showLoading(true);
+          showMessage(`Starting analysis of ${message.elementCount} elements...`, 'success');
+          break;
+        case 'make-ai-request':
+          handleAIRequest(message.request);
+          break;
+        case 'error':
+          showMessage(message.message, 'error');
+          break;
+        case 'success':
+          showMessage(message.message, 'success');
+          break;
+        default:
+          console.log('Unknown message type:', message.type);
+      }
+    };
+
+    function updateSelectionInfo(selectionData) {
+      const count = selectionData.length;
+      const selectionCount = document.getElementById('selectionCount');
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      
+      if (selectionCount) {
+        selectionCount.textContent = `${count} element${count !== 1 ? 's' : ''}`;
+      }
+      if (analyzeBtn) {
+        analyzeBtn.disabled = count === 0;
+      }
+    }
+
+    function showMessage(message, type) {
+      const errorDiv = document.getElementById('errorMessage');
+      const successDiv = document.getElementById('successMessage');
+      
+      if (type === 'error' && errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.classList.add('show');
+        if (successDiv) successDiv.classList.remove('show');
+        
+        setTimeout(() => {
+          errorDiv.classList.remove('show');
+        }, 5000);
+      } else if (type === 'success' && successDiv) {
+        successDiv.textContent = message;
+        successDiv.classList.add('show');
+        if (errorDiv) errorDiv.classList.remove('show');
+        
+        setTimeout(() => {
+          successDiv.classList.remove('show');
+        }, 3000);
+      }
+    }
+
+    function showLoading(show) {
+      const loadingDiv = document.getElementById('loadingIndicator');
+      if (loadingDiv) {
+        if (show) {
+          loadingDiv.classList.add('show');
+        } else {
+          loadingDiv.classList.remove('show');
+        }
+      }
+    }
+
+    async function handleAIRequest(request) {
+      console.log('🤖 Making AI API request:', request);
+      showLoading(true);
+      
+      try {
+        const apiEndpoint = document.getElementById('apiEndpoint')?.value || config.apiEndpoint;
+        const apiKey = document.getElementById('apiKey')?.value || config.apiKey;
+        
+        console.log('API Endpoint:', apiEndpoint);
+        
+        const requestBody = {
+          ...request,
+          apiKey: apiKey || 'test-api-key-12345'
+        };
+        
+        const response = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ AI Analysis Result:', result);
+        
+        showLoading(false);
+        displayAnalysisResults(result);
+        
+      } catch (error) {
+        console.error('❌ API request error:', error);
+        showLoading(false);
+        showMessage(`Analysis failed: ${error.message}`, 'error');
+      }
+    }
+
+    function displayAnalysisResults(result) {
+      const suggestionsContainer = document.getElementById('suggestionsContainer');
+      const suggestionsList = document.getElementById('suggestionsList');
+      
+      if (!suggestionsContainer || !suggestionsList) {
+        console.error('Suggestions containers not found');
+        return;
+      }
+      
+      // Clear previous results
+      suggestionsList.innerHTML = '';
+      
+      if (result.suggestions && result.suggestions.length > 0) {
+        // Show suggestions section
+        suggestionsContainer.classList.add('show');
+        
+        // Store suggestions globally
+        currentSuggestions = result.suggestions;
+        
+        // Add each suggestion
+        result.suggestions.forEach((suggestion, index) => {
+          const suggestionDiv = createSuggestionElement(suggestion, index);
+          suggestionsList.appendChild(suggestionDiv);
+        });
+        
+        showMessage(`Analysis complete! Found ${result.suggestions.length} suggestions.`, 'success');
+      } else {
+        // Show empty state
+        suggestionsList.innerHTML = '<p style="color: var(--figma-color-text-secondary); text-align: center; padding: 20px;">No specific suggestions found. Your design looks good!</p>';
+        suggestionsContainer.classList.add('show');
+        showMessage('Analysis complete - no changes needed!', 'success');
+      }
+    }
+
+    // Helper function to format suggestion values for display
+    function formatSuggestionValue(value, type) {
+        if (typeof value === 'object' && value !== null) {
+            if (value.r !== undefined && value.g !== undefined && value.b !== undefined) {
+                // Format Figma color object
+                const r = Math.round(value.r * 255);
+                const g = Math.round(value.g * 255);
+                const b = Math.round(value.b * 255);
+                return `RGB(${r}, ${g}, ${b})`;
+            }
+            // Other objects - just stringify
+            return JSON.stringify(value);
+        }
+        
+        // For numbers, check if it's a size/dimension
+        if (typeof value === 'number' && (type?.includes('size') || type?.includes('font'))) {
+            return `${value}px`;
+        }
+        
+        return String(value);
+    }
+
+    function createSuggestionElement(suggestion, index) {
+      const div = document.createElement('div');
+      div.className = 'suggestion-item';
+      div.innerHTML = `
+        <div class="suggestion-header">
+          <span class="suggestion-type">${suggestion.type || 'suggestion'}</span>
+          <span class="confidence">${suggestion.confidence || 'High'} confidence</span>
+        </div>
+        <div class="suggestion-content">
+          ${suggestion.reasoning ? `
+            <div class="suggestion-text">${suggestion.reasoning}</div>
+          ` : `
+            <div class="suggestion-text">${suggestion.description || suggestion.text || 'Improvement suggestion'}</div>
+          `}
+          ${suggestion.currentValue && suggestion.suggestedValue ? `
+            <div class="value-comparison">
+              <span class="current">Current: ${suggestion.currentValue}</span>
+              <span>→</span>
+              <span class="suggested">Suggested: ${formatSuggestionValue(suggestion.suggestedValue, suggestion.type)}</span>
+            </div>
+          ` : ''}
+        </div>
+        <div class="suggestion-actions">
+          <button class="button" onclick="applySuggestion(${index})">Apply</button>
+          <button class="button secondary" onclick="dismissSuggestion(${index})">Dismiss</button>
+        </div>
+      `;
+      return div;
+    }
+
+    function applySuggestion(index) {
+      const suggestion = currentSuggestions[index];
+      if (suggestion) {
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'apply-suggestion', 
+            suggestion: suggestion 
+          } 
+        }, '*');
+        showMessage('Applying suggestion...', 'success');
+      }
+    }
+
+    function dismissSuggestion(index) {
+      const suggestionElements = document.querySelectorAll('.suggestion-item');
+      if (suggestionElements[index]) {
+        suggestionElements[index].style.opacity = '0.5';
+        suggestionElements[index].style.pointerEvents = 'none';
+      }
+      showMessage('Suggestion dismissed', 'success');
+    }
+
+    // Expose functions for onclick handlers
+    window.applySuggestion = applySuggestion;
+    window.dismissSuggestion = dismissSuggestion;
+
+    function toggleConfig() {
+      const configSection = document.getElementById('configSection');
+      if (configSection) {
+        configSection.classList.toggle('expanded');
+      }
+    }
+
+    function saveConfig() {
+      const apiEndpoint = document.getElementById('apiEndpoint')?.value;
+      const apiKey = document.getElementById('apiKey')?.value;
+      const analysisType = document.getElementById('analysisType')?.value;
+      
+      if (apiEndpoint) config.apiEndpoint = apiEndpoint;
+      if (apiKey) config.apiKey = apiKey;
+      if (analysisType) config.analysisType = analysisType;
+      
+      showMessage('Configuration saved!', 'success');
+      console.log('Config saved:', config);
+    }
+
+    // Expose for onclick handlers
+    window.toggleConfig = toggleConfig;
+    window.saveConfig = saveConfig;
+
+    console.log('📋 UI SCRIPT LOADED - Inline version');
+  </script>
+</body>
+</html>

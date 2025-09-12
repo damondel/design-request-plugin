@@ -1,0 +1,25 @@
+{
+  "name": "CXS AI Chat Request",
+  "id": "cxs-ai-chat-request",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma",
+    "figjam"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://api.openai.com",
+      "https://api.replicate.com",
+      "https://huggingface.co"
+    ],
+    "devAllowedDomains": [
+      "http://localhost:3001",
+      "https://localhost:3001"
+    ],
+    "reasoning": "CXS AI Chat Request connects to external AI services to provide contextual design analysis and suggestions. The plugin analyzes Figma design elements and returns intelligent recommendations based on CXS design requirements."
+  }
+}

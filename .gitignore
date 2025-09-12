@@ -1,0 +1,94 @@
+# Environment Variables - NEVER commit these!
+.env
+.env.local
+.env.production
+.env.staging
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Figma Plugin Build Output
+*.js.map
+
+# Development and Testing Files
+test_*.js
+*_test.js
+comprehensive_*.js
+quick_*.js
+
+# Workspace and Development Documentation
+WORKSPACE_AUDIT.md
+DEMO_SCRIPT.md
+GITHUB_READY.md
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Windows
+$RECYCLE.BIN/
+
+# Temporary Files
+*.tmp
+*.temp
+*.log
+
+# Build artifacts
+dist/
+build/
+.cache/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Azure and Cloud Config (if any)
+.azure/
+*.publish
+
+# Local development certificates
+*.pem
+*.key
+*.cert
+
+# Debug logs
+debug.log
+
+# Plugin development artifacts
+.figma/
+figma-plugin.zip
