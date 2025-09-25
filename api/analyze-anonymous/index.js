@@ -4,13 +4,17 @@ module.exports = async function (context, req) {
     context.log('Anonymous API function triggered.');
     
     try {
-        // Set CORS headers for Figma plugin (handles 'null' origin)
+        // Set CORS headers for Figma plugin
+        const origin = req.headers.origin;
+        const allowedOrigins = ['https://www.figma.com', 'https://figma.com', 'null'];
+        const corsOrigin = allowedOrigins.includes(origin) ? origin : '*';
+        
         const corsHeaders = {
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": corsOrigin,
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
             "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, X-Requested-With",
-            "Access-Control-Max-Age": "86400",
-            "Vary": "Origin"
+            "Access-Control-Allow-Credentials": "false",
+            "Access-Control-Max-Age": "86400"
         };
         
         context.res = {
