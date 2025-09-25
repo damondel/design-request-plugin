@@ -3,7 +3,7 @@
 // Global state
 let currentSuggestions = [];
 let config = {
-    apiEndpoint: 'http://localhost:3001/api/analyze',
+    apiEndpoint: 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
     apiKey: '',
     analysisType: 'design-analysis'
 };
@@ -175,6 +175,7 @@ function hideLoading() {
 }
 // Make request to AI API
 async function handleAIRequest(request) {
+    var _a;
     try {
         console.log('Making AI request to:', config.apiEndpoint);
         console.log('Request data:', request);
@@ -185,11 +186,17 @@ async function handleAIRequest(request) {
         if (config.apiKey) {
             headers['Authorization'] = `Bearer ${config.apiKey}`;
         }
+        // Transform the request to match Azure Static Web App API format
+        const apiRequest = {
+            elements: ((_a = request.data) === null || _a === void 0 ? void 0 : _a.elements) || request.elements || [],
+            type: config.analysisType,
+            data: request.data
+        };
+        console.log('Transformed API request:', apiRequest);
         const response = await fetch(config.apiEndpoint, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(Object.assign(Object.assign({}, request), { type: config.analysisType // Override with user's preference
-             }))
+            body: JSON.stringify(apiRequest)
         });
         if (!response.ok) {
             throw new Error(`API request failed: ${response.status} ${response.statusText}`);

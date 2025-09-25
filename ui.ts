@@ -10,7 +10,7 @@ interface Config {
 // Global state
 let currentSuggestions: any[] = [];
 let config: Config = {
-  apiEndpoint: 'http://localhost:3001/api/analyze',
+  apiEndpoint: 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
   apiKey: '',
   analysisType: 'design-analysis'
 };
@@ -223,13 +223,19 @@ async function handleAIRequest(request: any) {
       headers['Authorization'] = `Bearer ${config.apiKey}`;
     }
 
+    // Transform the request to match Azure Static Web App API format
+    const apiRequest = {
+      elements: request.data?.elements || request.elements || [],
+      type: config.analysisType,
+      data: request.data
+    };
+
+    console.log('Transformed API request:', apiRequest);
+
     const response = await fetch(config.apiEndpoint, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({
-        ...request,
-        type: config.analysisType // Override with user's preference
-      })
+      body: JSON.stringify(apiRequest)
     });
 
     if (!response.ok) {
