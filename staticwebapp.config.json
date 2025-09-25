@@ -47,8 +47,9 @@
     }
   },
   "globalHeaders": {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key"
+    "Access-Control-Allow-Origin": "https://www.figma.com",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, X-Requested-With",
+    "Access-Control-Allow-Credentials": "false"
   }
 }
