@@ -1,4 +1,4 @@
-const { callAzureOpenAI, generateMockAIResponse, parseColorValueForFigma, parseNumericValueFromAI } = require('../server-utils');
+const { callAzureOpenAI, callAzureAIFoundryAgent, generateMockAIResponse, parseColorValueForFigma, parseNumericValueFromAI } = require('../server-utils');
 
 module.exports = async function (context, req) {
     context.log('Anonymous API function triggered.');
@@ -60,27 +60,41 @@ module.exports = async function (context, req) {
         
         let aiResponse;
         
-        // Try real AI first if available and configured
+        // Try Azure AI Foundry agent first if available and configured
         if (REAL_AI_AVAILABLE) {
             try {
-                context.log('Attempting Azure OpenAI request...');
-                const rawResponse = await callAzureOpenAI(elements, 
+                context.log('Attempting Azure AI Foundry agent request...');
+                const rawResponse = await callAzureAIFoundryAgent(elements, 
                     AZURE_OPENAI_ENDPOINT, 
-                    AZURE_OPENAI_API_KEY, 
-                    AZURE_OPENAI_DEPLOYMENT);
+                    AZURE_OPENAI_API_KEY);
                 
-                // Clean and parse the response
-                let cleanedResponse = rawResponse.trim();
-                if (cleanedResponse.startsWith('```json')) {
-                    cleanedResponse = cleanedResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
-                }
-                
-                aiResponse = JSON.parse(cleanedResponse);
-                context.log('Azure OpenAI response parsed successfully');
+                // Parse the agent response
+                aiResponse = {
+                    suggestions: rawResponse.suggestions || [],
+                    message: rawResponse.message || 'Analysis completed via Azure AI Foundry agent'
+                };
+                context.log('Azure AI Foundry agent response received successfully');
                 
             } catch (aiError) {
-                context.log(`Azure OpenAI failed, using mock fallback: ${aiError.message}`);
-                aiResponse = generateMockAIResponse(elements);
+                context.log(`Azure AI Foundry agent failed, trying direct OpenAI fallback: ${aiError.message}`);
+                try {
+                    const rawResponse = await callAzureOpenAI(elements, 
+                        AZURE_OPENAI_ENDPOINT, 
+                        AZURE_OPENAI_API_KEY, 
+                        AZURE_OPENAI_DEPLOYMENT);
+                    
+                    // Clean and parse the response
+                    let cleanedResponse = rawResponse.trim();
+                    if (cleanedResponse.startsWith('```json')) {
+                        cleanedResponse = cleanedResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
+                    }
+                    
+                    aiResponse = JSON.parse(cleanedResponse);
+                    context.log('Direct Azure OpenAI response parsed successfully');
+                } catch (openaiError) {
+                    context.log(`Direct OpenAI also failed, using mock fallback: ${openaiError.message}`);
+                    aiResponse = generateMockAIResponse(elements);
+                }
             }
         } else {
             context.log('Using mock AI response (real AI not configured)');

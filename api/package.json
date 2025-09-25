@@ -4,6 +4,8 @@
   "description": "API for Azure AI Foundry Design Request Plugin",
   "main": "index.js",
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "@azure/ai-projects": "^1.0.0",
+    "@azure/identity": "^4.0.0"
   }
 }

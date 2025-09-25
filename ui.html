@@ -329,7 +329,7 @@
       
       <div class="input-group">
         <label for="apiEndpoint">AI API Endpoint:</label>
-        <input type="text" id="apiEndpoint" value="http://localhost:3001/api/analyze" placeholder="Enter your AI API URL">
+        <input type="text" id="apiEndpoint" value="https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous" placeholder="Enter your AI API URL">
       </div>
 
       <div class="input-group">
@@ -356,8 +356,8 @@
     // Global state
     let currentSuggestions = [];
     let config = {
-      apiEndpoint: 'http://localhost:3001/api/analyze',
-      apiKey: '',
+      apiEndpoint: 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
+      apiKey: '', // API key handled server-side via environment variables
       analysisType: 'design-analysis'
     };
 

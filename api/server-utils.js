@@ -203,8 +203,94 @@ function parseNumericValueFromAI(value) {
   return match ? parseFloat(match[1]) : null;
 }
 
+// Azure AI Foundry Agent API Call (server-side with DefaultAzureCredential)
+async function callAzureAIFoundryAgent(elementsData, endpoint, apiKey) {
+  // Import the Azure SDK for server-side authentication
+  const { AIProjectClient } = require("@azure/ai-projects");
+  const { DefaultAzureCredential } = require("@azure/identity");
+
+  const projectEndpoint = "https://wmdefault-2478-resource.services.ai.azure.com/api/projects/wmdefault-2478";
+  const agentId = "asst_qrwJB85AgguLd3cIPJjF86Nv";
+
+  try {
+    // Use Azure SDK with DefaultAzureCredential (works in Azure environment)
+    const project = new AIProjectClient(projectEndpoint, new DefaultAzureCredential());
+    
+    // Get the agent
+    const agent = await project.agents.getAgent(agentId);
+    console.log(`Retrieved agent: ${agent.name}`);
+
+    // Create a thread
+    const thread = await project.agents.threads.create();
+    console.log(`Created thread, ID: ${thread.id}`);
+
+    // Create message with design analysis request
+    const messageContent = `Please analyze these Figma design elements and provide specific improvement suggestions:
+
+${elementsData.map(el => `- ID: ${el.id} | ${el.type} "${el.name}" (${el.width}x${el.height}, ${el.fill || el.color || 'no color'})`).join('\n')}
+
+Focus on:
+1. Color harmony and accessibility
+2. Typography and readability  
+3. Layout and spacing
+4. Visual hierarchy
+
+Provide actionable suggestions that a designer can implement.`;
+
+    const message = await project.agents.messages.create(thread.id, "user", messageContent);
+    console.log(`Created message, ID: ${message.id}`);
+
+    // Create run
+    let run = await project.agents.runs.create(thread.id, agent.id);
+
+    // Poll until the run reaches a terminal status
+    while (run.status === "queued" || run.status === "in_progress") {
+      // Wait for a second
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      run = await project.agents.runs.get(thread.id, run.id);
+    }
+
+    if (run.status === "failed") {
+      throw new Error(`Agent run failed: ${run.lastError}`);
+    }
+
+    console.log(`Run completed with status: ${run.status}`);
+
+    // Retrieve messages
+    const messages = await project.agents.messages.list(thread.id, { order: "asc" });
+
+    // Find assistant response
+    let assistantResponse = null;
+    for await (const m of messages) {
+      if (m.role === 'assistant') {
+        const content = m.content.find((c) => c.type === "text" && "text" in c);
+        if (content) {
+          assistantResponse = content.text.value;
+          break;
+        }
+      }
+    }
+
+    if (!assistantResponse) {
+      throw new Error('No response from agent');
+    }
+
+    // Parse the response and structure it for the frontend
+    return {
+      suggestions: [], // You might want to parse suggestions from the text response
+      message: assistantResponse,
+      source: 'Azure AI Foundry Agent'
+    };
+
+  } catch (error) {
+    console.error('Azure AI Foundry Agent error:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   callAzureOpenAI,
+  callAzureAIFoundryAgent,
   generateMockAIResponse,
   parseColorValueForFigma,
   parseNumericValueFromAI
