@@ -12,6 +12,7 @@
   ],
   "networkAccess": {
     "allowedDomains": [
+      "https://delightful-pebble-004e7300f.1.azurestaticapps.net",
       "https://api.openai.com",
       "https://api.replicate.com",
       "https://huggingface.co"
@@ -20,6 +21,6 @@
       "http://localhost:3001",
       "https://localhost:3001"
     ],
-    "reasoning": "CXS AI Chat Request connects to external AI services to provide contextual design analysis and suggestions. The plugin analyzes Figma design elements and returns intelligent recommendations based on CXS design requirements."
+    "reasoning": "CXS AI Chat Request connects to Azure Static Web App API for design analysis and external AI services to provide contextual design analysis and suggestions. The plugin analyzes Figma design elements and returns intelligent recommendations based on CXS design requirements."
   }
 }
