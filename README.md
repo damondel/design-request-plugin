@@ -2,6 +2,8 @@
 
 A comprehensive example demonstrating contextual AI integration with Figma plugins. This project shows the complete architecture pattern for connecting Figma plugins with AI services, specifically developed in response to CXS design workflow requirements.
 
+<!-- Deployment trigger: Azure Static Web App deployment - 2025-09-25 -->
+
 ## 🎯 Overview
 
 This plugin demonstrates:
