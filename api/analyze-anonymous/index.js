@@ -4,16 +4,11 @@ module.exports = async function (context, req) {
     context.log('Anonymous API function triggered.');
     
     try {
-        // Set CORS headers for Figma plugin
-        const origin = req.headers.origin;
-        const allowedOrigins = ['https://www.figma.com', 'https://figma.com', 'null'];
-        const corsOrigin = allowedOrigins.includes(origin) ? origin : '*';
-        
+        // Set CORS headers for Figma plugin (same as working test endpoint)
         const corsHeaders = {
-            "Access-Control-Allow-Origin": corsOrigin,
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, X-Requested-With",
-            "Access-Control-Allow-Credentials": "false",
+            "Access-Control-Allow-Origin": "https://www.figma.com",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
             "Access-Control-Max-Age": "86400"
         };
         
@@ -23,7 +18,11 @@ module.exports = async function (context, req) {
 
         // Handle OPTIONS request for CORS preflight
         if (req.method === 'OPTIONS') {
-            context.res.status = 200;
+            context.res = {
+                status: 200,
+                headers: corsHeaders,
+                body: {}
+            };
             context.done();
             return;
         }
@@ -36,13 +35,16 @@ module.exports = async function (context, req) {
         context.log(`Processing ${elements.length} elements for type: ${requestType}`);
         
         if (!elements || !Array.isArray(elements)) {
-            context.res.status = 400;
-            context.res.body = { 
-                error: 'Invalid request: elements array is required',
-                received: {
-                    elementsType: typeof elements,
-                    elementsLength: elements?.length,
-                    bodyKeys: Object.keys(req.body)
+            context.res = {
+                status: 400,
+                headers: corsHeaders,
+                body: { 
+                    error: 'Invalid request: elements array is required',
+                    received: {
+                        elementsType: typeof elements,
+                        elementsLength: elements?.length,
+                        bodyKeys: Object.keys(req.body)
+                    }
                 }
             };
             return;
@@ -132,30 +134,36 @@ module.exports = async function (context, req) {
         }).filter(suggestion => suggestion !== null);
 
         // Response format optimized for Azure AI Foundry agents
-        context.res.status = 200;
-        context.res.body = {
-            success: true,
-            suggestions: enhancedSuggestions,
-            metadata: {
-                elementsAnalyzed: elements.length,
-                analysisType: requestType,
-                timestamp: new Date().toISOString(),
-                source: 'CXS AI Design Request Plugin'
+        context.res = {
+            status: 200,
+            headers: corsHeaders,
+            body: {
+                success: true,
+                suggestions: enhancedSuggestions,
+                metadata: {
+                    elementsAnalyzed: elements.length,
+                    analysisType: requestType,
+                    timestamp: new Date().toISOString(),
+                    source: 'CXS AI Design Request Plugin'
+                }
             }
         };
         
     } catch (error) {
         context.log.error(`Analysis error: ${error.message}`);
         
-        // Always provide a fallback response
-        context.res.status = 200;
-        context.res.body = {
-            success: false,
-            error: error.message,
-            suggestions: generateMockAIResponse([]).suggestions || [],
-            metadata: {
-                fallback: true,
-                timestamp: new Date().toISOString()
+        // Always provide a fallback response with CORS headers
+        context.res = {
+            status: 200,
+            headers: corsHeaders,
+            body: {
+                success: false,
+                error: error.message,
+                suggestions: generateMockAIResponse([]).suggestions || [],
+                metadata: {
+                    fallback: true,
+                    timestamp: new Date().toISOString()
+                }
             }
         };
     }
