@@ -1,0 +1,54 @@
+{
+  "routes": [
+    {
+      "route": "/api/analyze-anonymous",
+      "methods": ["GET", "POST", "OPTIONS"],
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/api/analyze",
+      "methods": ["GET", "POST", "OPTIONS"],
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/health",
+      "methods": ["GET"],
+      "allowedRoles": ["anonymous"]
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/images/*.{png,jpg,gif}", "/css/*"]
+  },
+  "responseOverrides": {
+    "400": {
+      "statusCode": 200,
+      "body": {
+        "error": "Bad request - invalid input data"
+      }
+    },
+    "401": {
+      "statusCode": 200,
+      "body": {
+        "error": "Unauthorized - authentication required"
+      }
+    },
+    "403": {
+      "statusCode": 200,
+      "body": {
+        "error": "Forbidden - insufficient permissions"
+      }
+    },
+    "404": {
+      "statusCode": 200,
+      "body": {
+        "error": "Resource not found"
+      }
+    }
+  },
+  "globalHeaders": {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key"
+  }
+}

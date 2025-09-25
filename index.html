@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CXS AI Design Request API</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #eaeaea;
+            padding-bottom: 1rem;
+        }
+        .endpoints {
+            background-color: #f9f9f9;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 2rem 0;
+        }
+        code {
+            background-color: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .endpoint-url {
+            font-weight: bold;
+            color: #0066cc;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background-color: #4caf50;
+            color: white;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>CXS AI Design Request API</h1>
+    <p>This API provides AI-powered design suggestions for Figma elements.</p>
+    
+    <div class="status">Service Status: Online</div>
+    
+    <div class="endpoints">
+        <h2>Available Endpoints</h2>
+        <ul>
+            <li><span class="endpoint-url">/api/analyze</span> - Analyze design elements (POST)</li>
+            <li><span class="endpoint-url">/api/analyze-anonymous</span> - Anonymous analysis for AI Foundry (POST)</li>
+            <li><span class="endpoint-url">/health</span> - Health check endpoint (GET)</li>
+        </ul>
+    </div>
+    
+    <h2>Testing the API</h2>
+    <p>You can test the API with a simple curl command:</p>
+    <pre><code>curl -X POST https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous \
+    -H "Content-Type: application/json" \
+    -d '{"elements":[{"id":"1:123","type":"RECTANGLE","name":"Button","width":200,"height":50}]}'</code></pre>
+    
+    <h2>Documentation</h2>
+    <p>For full API documentation, refer to the OpenAPI specification.</p>
+    
+    <script>
+        // Fetch the health endpoint to verify API status
+        fetch('/health')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.status').textContent = `Service Status: ${data.status === 'healthy' ? 'Online' : 'Issues Detected'}`;
+            })
+            .catch(error => {
+                document.querySelector('.status').textContent = 'Service Status: Offline';
+                document.querySelector('.status').style.backgroundColor = '#f44336';
+            });
+    </script>
+</body>
+</html>

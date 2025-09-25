@@ -1,0 +1,199 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "CXS AI Design Request Plugin API - Anonymous",
+    "version": "1.0.0",
+    "description": "API for analyzing Figma design elements and providing AI suggestions (no authentication required)"
+  },
+  "servers": [
+    {
+      "url": "https://delightful-pebble-004e7300f.1.azurestaticapps.net",
+      "description": "Azure Static Web App hosting the Design Request API"
+    }
+  ],
+  "paths": {
+    "/api/analyze-anonymous": {
+      "post": {
+        "operationId": "analyze-design-elements",
+        "summary": "Analyze design elements and get AI suggestions",
+        "description": "Analyzes Figma design elements and returns AI-powered suggestions for improvements",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analysis successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid input data"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalysisRequest": {
+        "type": "object",
+        "required": ["elements"],
+        "properties": {
+          "elements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DesignElement"
+            },
+            "description": "Array of Figma design elements to analyze"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["design-analysis", "color-suggestion", "layout-optimization"],
+            "default": "design-analysis",
+            "description": "Type of analysis to perform"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "elements": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DesignElement"
+                }
+              },
+              "context": {
+                "type": "string",
+                "description": "Additional context about the design"
+              }
+            }
+          }
+        }
+      },
+      "DesignElement": {
+        "type": "object",
+        "required": ["id", "type", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique Figma element ID (e.g., '123:456')"
+          },
+          "type": {
+            "type": "string",
+            "description": "Figma element type",
+            "enum": ["FRAME", "TEXT", "RECTANGLE", "ELLIPSE", "POLYGON", "GROUP", "COMPONENT", "INSTANCE", "SHAPE_WITH_TEXT"]
+          },
+          "name": {
+            "type": "string",
+            "description": "Element name as shown in Figma layers panel"
+          },
+          "width": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Element width in pixels"
+          },
+          "height": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Element height in pixels"
+          },
+          "x": {
+            "type": "number",
+            "description": "X position relative to parent"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y position relative to parent"
+          },
+          "fills": {
+            "type": "array",
+            "description": "Array of fill properties (colors, gradients, etc.)"
+          },
+          "strokes": {
+            "type": "array",
+            "description": "Array of stroke properties"
+          },
+          "effects": {
+            "type": "array",
+            "description": "Array of effects (shadows, blurs, etc.)"
+          },
+          "characters": {
+            "type": "string",
+            "description": "Text content (only for TEXT elements)"
+          }
+        }
+      },
+      "AnalysisResponse": {
+        "type": "object",
+        "required": ["suggestions"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the analysis was successful"
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            },
+            "description": "Array of AI-generated design suggestions"
+          },
+          "message": {
+            "type": "string",
+            "description": "Additional information about the analysis"
+          }
+        }
+      },
+      "Suggestion": {
+        "type": "object",
+        "required": ["type", "elementId", "property", "suggestedValue", "confidence", "reasoning"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["color", "size", "text", "position", "alignment", "general"],
+            "description": "Category of the suggestion"
+          },
+          "elementId": {
+            "type": "string",
+            "description": "Target Figma element ID that the suggestion applies to"
+          },
+          "property": {
+            "type": "string",
+            "description": "Specific property to modify",
+            "enum": ["fill", "width", "height", "content", "characters", "text", "x", "y", "alignment"]
+          },
+          "currentValue": {
+            "description": "Current value of the property (any type)"
+          },
+          "suggestedValue": {
+            "description": "Suggested new value for the property (any type)"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence score for this suggestion (0.0 to 1.0)"
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Human-readable explanation of why this change is suggested"
+          }
+        }
+      }
+    }
+  }
+}
