@@ -205,14 +205,14 @@ function parseNumericValueFromAI(value) {
 
 // Azure AI Foundry Agent API Call (server-side with DefaultAzureCredential)
 async function callAzureAIFoundryAgent(elementsData, endpoint, apiKey) {
-  // Import the Azure SDK for server-side authentication
-  const { AIProjectClient } = require("@azure/ai-projects");
-  const { DefaultAzureCredential } = require("@azure/identity");
-
-  const projectEndpoint = "https://wmdefault-2478-resource.services.ai.azure.com/api/projects/wmdefault-2478";
-  const agentId = "asst_qrwJB85AgguLd3cIPJjF86Nv";
-
   try {
+    // Try to import Azure SDK - if it fails, we'll throw and fall back to direct OpenAI
+    const { AIProjectClient } = require("@azure/ai-projects");
+    const { DefaultAzureCredential } = require("@azure/identity");
+
+    const projectEndpoint = "https://wmdefault-2478-resource.services.ai.azure.com/api/projects/wmdefault-2478";
+    const agentId = "asst_qrwJB85AgguLd3cIPJjF86Nv";
+
     // Use Azure SDK with DefaultAzureCredential (works in Azure environment)
     const project = new AIProjectClient(projectEndpoint, new DefaultAzureCredential());
     
@@ -283,7 +283,8 @@ Provide actionable suggestions that a designer can implement.`;
     };
 
   } catch (error) {
-    console.error('Azure AI Foundry Agent error:', error);
+    console.error('Azure AI Foundry Agent error (will fall back to direct OpenAI):', error);
+    // Re-throw to trigger fallback in the calling function
     throw error;
   }
 }
