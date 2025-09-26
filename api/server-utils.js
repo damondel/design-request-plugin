@@ -291,7 +291,7 @@ Provide actionable suggestions that a designer can implement.`;
 
 module.exports = {
   callAzureOpenAI,
-  callAzureAIFoundryAgent,
+  // callAzureAIFoundryAgent, // Temporarily disabled for deployment testing
   generateMockAIResponse,
   parseColorValueForFigma,
   parseNumericValueFromAI
