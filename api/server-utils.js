@@ -203,28 +203,39 @@ function parseNumericValueFromAI(value) {
   return match ? parseFloat(match[1]) : null;
 }
 
-// Azure AI Foundry Agent API Call (server-side with DefaultAzureCredential)
-async function callAzureAIFoundryAgent(elementsData, endpoint, apiKey) {
+// Azure AI Foundry Agent API Call (SDK-free REST API approach)
+async function callAzureAIFoundryAgent(elementsData, projectEndpoint, agentId, accessToken) {
   try {
-    // Try to import Azure SDK - if it fails, we'll throw and fall back to direct OpenAI
-    const { AIProjectClient } = require("@azure/ai-projects");
-    const { DefaultAzureCredential } = require("@azure/identity");
-
-    const projectEndpoint = "https://wmdefault-2478-resource.services.ai.azure.com/api/projects/wmdefault-2478";
-    const agentId = "asst_qrwJB85AgguLd3cIPJjF86Nv";
-
-    // Use Azure SDK with DefaultAzureCredential (works in Azure environment)
-    const project = new AIProjectClient(projectEndpoint, new DefaultAzureCredential());
+    console.log('🤖 Starting SDK-free Azure AI Foundry agent call...');
     
-    // Get the agent
-    const agent = await project.agents.getAgent(agentId);
-    console.log(`Retrieved agent: ${agent.name}`);
+    // Validate inputs
+    if (!projectEndpoint || !agentId) {
+      throw new Error('Project endpoint and agent ID are required');
+    }
 
-    // Create a thread
-    const thread = await project.agents.threads.create();
-    console.log(`Created thread, ID: ${thread.id}`);
+    // If no access token provided, try to get one (this would need to be configured)
+    if (!accessToken) {
+      throw new Error('Access token is required for Azure AI Foundry REST API calls');
+    }
 
-    // Create message with design analysis request
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+      'User-Agent': 'Figma-Design-Plugin/1.0'
+    };
+
+    // Step 1: Create a thread
+    console.log('📝 Creating thread...');
+    const threadResponse = await axios.post(
+      `${projectEndpoint}/threads?api-version=v1`,
+      {},
+      { headers, timeout: 30000 }
+    );
+    
+    const threadId = threadResponse.data.id;
+    console.log(`✅ Thread created: ${threadId}`);
+
+    // Step 2: Create a message in the thread
     const messageContent = `Please analyze these Figma design elements and provide specific improvement suggestions:
 
 ${elementsData.map(el => `- ID: ${el.id} | ${el.type} "${el.name}" (${el.width}x${el.height}, ${el.fill || el.color || 'no color'})`).join('\n')}
@@ -235,63 +246,209 @@ Focus on:
 3. Layout and spacing
 4. Visual hierarchy
 
-Provide actionable suggestions that a designer can implement.`;
+Provide actionable suggestions that a designer can implement in Figma. Be specific about colors, sizes, and positioning.`;
 
-    const message = await project.agents.messages.create(thread.id, "user", messageContent);
-    console.log(`Created message, ID: ${message.id}`);
+    console.log('💬 Creating message...');
+    const messageResponse = await axios.post(
+      `${projectEndpoint}/threads/${threadId}/messages?api-version=v1`,
+      {
+        role: 'user',
+        content: messageContent
+      },
+      { headers, timeout: 30000 }
+    );
+    
+    console.log(`✅ Message created: ${messageResponse.data.id}`);
 
-    // Create run
-    let run = await project.agents.runs.create(thread.id, agent.id);
+    // Step 3: Create a run with the agent
+    console.log('🏃 Creating run...');
+    const runResponse = await axios.post(
+      `${projectEndpoint}/threads/${threadId}/runs?api-version=v1`,
+      {
+        assistant_id: agentId
+      },
+      { headers, timeout: 30000 }
+    );
+    
+    const runId = runResponse.data.id;
+    console.log(`✅ Run created: ${runId}`);
 
-    // Poll until the run reaches a terminal status
-    while (run.status === "queued" || run.status === "in_progress") {
-      // Wait for a second
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      run = await project.agents.runs.get(thread.id, run.id);
-    }
-
-    if (run.status === "failed") {
-      throw new Error(`Agent run failed: ${run.lastError}`);
-    }
-
-    console.log(`Run completed with status: ${run.status}`);
-
-    // Retrieve messages
-    const messages = await project.agents.messages.list(thread.id, { order: "asc" });
-
-    // Find assistant response
-    let assistantResponse = null;
-    for await (const m of messages) {
-      if (m.role === 'assistant') {
-        const content = m.content.find((c) => c.type === "text" && "text" in c);
-        if (content) {
-          assistantResponse = content.text.value;
-          break;
-        }
+    // Step 4: Poll for completion
+    let run = runResponse.data;
+    let attempts = 0;
+    const maxAttempts = 60; // 60 seconds max
+    
+    while (run.status === 'queued' || run.status === 'in_progress') {
+      if (attempts >= maxAttempts) {
+        throw new Error('Run timed out after 60 seconds');
       }
+      
+      console.log(`⏳ Run status: ${run.status}, attempt ${attempts + 1}/${maxAttempts}`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const statusResponse = await axios.get(
+        `${projectEndpoint}/threads/${threadId}/runs/${runId}?api-version=v1`,
+        { headers, timeout: 10000 }
+      );
+      
+      run = statusResponse.data;
+      attempts++;
     }
 
-    if (!assistantResponse) {
-      throw new Error('No response from agent');
+    if (run.status === 'failed') {
+      throw new Error(`Agent run failed: ${run.last_error?.message || 'Unknown error'}`);
     }
 
-    // Parse the response and structure it for the frontend
+    console.log(`✅ Run completed with status: ${run.status}`);
+
+    // Step 5: Retrieve messages
+    console.log('📥 Retrieving messages...');
+    const messagesResponse = await axios.get(
+      `${projectEndpoint}/threads/${threadId}/messages?api-version=v1&order=desc&limit=10`,
+      { headers, timeout: 30000 }
+    );
+
+    // Find the latest assistant message
+    const messages = messagesResponse.data.data || [];
+    const assistantMessage = messages.find(m => m.role === 'assistant');
+    
+    if (!assistantMessage) {
+      throw new Error('No assistant response found');
+    }
+
+    // Extract text content
+    const textContent = assistantMessage.content.find(c => c.type === 'text');
+    if (!textContent) {
+      throw new Error('No text content in assistant response');
+    }
+
+    const assistantResponse = textContent.text.value;
+    console.log('✅ Got assistant response:', assistantResponse.substring(0, 200) + '...');
+
+    // Clean up the thread (optional)
+    try {
+      await axios.delete(`${projectEndpoint}/threads/${threadId}?api-version=v1`, { headers, timeout: 10000 });
+      console.log('🗑️ Thread cleaned up');
+    } catch (cleanupError) {
+      console.warn('⚠️ Could not clean up thread:', cleanupError.message);
+    }
+
     return {
-      suggestions: [], // You might want to parse suggestions from the text response
       message: assistantResponse,
-      source: 'Azure AI Foundry Agent'
+      source: 'Azure AI Foundry Agent (REST API)',
+      threadId: threadId,
+      runId: runId
     };
 
   } catch (error) {
-    console.error('Azure AI Foundry Agent error (will fall back to direct OpenAI):', error);
-    // Re-throw to trigger fallback in the calling function
+    const errorMessage = error.response ? 
+      `API Error ${error.response.status}: ${error.response.statusText} - ${JSON.stringify(error.response.data)}` : 
+      error.message;
+    
+    console.error('❌ Azure AI Foundry Agent REST API error:', errorMessage);
+    throw new Error(`Azure AI Foundry Agent failed: ${errorMessage}`);
+  }
+}
+
+// Alternative: Use Azure OpenAI directly as a simpler approach
+async function callAzureAIFoundryViaOpenAI(elementsData, endpoint, apiKey, deployment) {
+  try {
+    console.log('🔄 Using Azure OpenAI as Azure AI Foundry alternative...');
+    
+    // Enhanced prompt to mimic agent behavior
+    const systemPrompt = `You are a UX/UI design expert agent integrated with Figma. Your role is to analyze design elements and provide specific, actionable improvement suggestions that can be directly applied in Figma.
+
+Guidelines:
+- Focus on visual hierarchy, color harmony, typography, and layout
+- Provide specific color values (hex codes)
+- Suggest precise sizing adjustments
+- Recommend alignment and spacing improvements
+- Consider accessibility and modern design principles
+
+Always respond with JSON in this format:
+{
+  "suggestions": [
+    {
+      "type": "color|size|text|alignment",
+      "elementId": "exact-figma-element-id",
+      "property": "fill|width|height|content|alignment",
+      "currentValue": "current value",
+      "suggestedValue": "new value",
+      "confidence": 0.8,
+      "reasoning": "detailed explanation"
+    }
+  ]
+}`;
+
+    const userPrompt = `Analyze these Figma design elements and provide improvement suggestions:
+
+${elementsData.map(el => `- ID: ${el.id} | Type: ${el.type} | Name: "${el.name}" | Size: ${el.width}x${el.height}px | Color: ${el.fill || el.color || 'none'}`).join('\n')}
+
+Provide 2-4 specific suggestions that would improve the design's visual hierarchy and user experience.`;
+
+    const response = await axios.post(
+      `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=2024-02-01`,
+      {
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        max_tokens: 2000,
+        temperature: 0.7
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': apiKey
+        },
+        timeout: 45000
+      }
+    );
+
+    const assistantResponse = response.data.choices[0].message.content;
+    
+    return {
+      message: assistantResponse,
+      source: 'Azure OpenAI (Agent-style)',
+      model: deployment
+    };
+
+  } catch (error) {
+    console.error('❌ Azure OpenAI alternative failed:', error.message);
     throw error;
+  }
+}
+
+// Get Azure access token using client credentials flow (no SDK required)
+async function getAzureAccessToken(tenantId, clientId, clientSecret) {
+  try {
+    const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+    
+    const params = new URLSearchParams();
+    params.append('client_id', clientId);
+    params.append('client_secret', clientSecret);
+    params.append('scope', 'https://ai.azure.com/.default'); // Correct audience for Azure AI Foundry
+    params.append('grant_type', 'client_credentials');
+
+    const response = await axios.post(tokenUrl, params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      timeout: 30000
+    });
+
+    return response.data.access_token;
+  } catch (error) {
+    console.error('❌ Failed to get Azure access token:', error.message);
+    throw new Error(`Token acquisition failed: ${error.message}`);
   }
 }
 
 module.exports = {
   callAzureOpenAI,
-  // callAzureAIFoundryAgent, // Temporarily disabled for deployment testing
+  callAzureAIFoundryAgent, // SDK-free REST API implementation
+  callAzureAIFoundryViaOpenAI, // Alternative using Azure OpenAI with agent-style prompts
+  getAzureAccessToken, // Helper for authentication
   generateMockAIResponse,
   parseColorValueForFigma,
   parseNumericValueFromAI

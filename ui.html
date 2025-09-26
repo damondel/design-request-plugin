@@ -328,6 +328,15 @@
       </div>
       
       <div class="input-group">
+        <label for="aiProvider">AI Provider:</label>
+        <select id="aiProvider" onchange="updateProviderSettings()">
+          <option value="azure-openai">Azure OpenAI</option>
+          <option value="azure-foundry">Azure AI Foundry Agent</option>
+          <option value="custom">Custom Endpoint</option>
+        </select>
+      </div>
+
+      <div class="input-group">
         <label for="apiEndpoint">AI API Endpoint:</label>
         <input type="text" id="apiEndpoint" value="https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous" placeholder="Enter your AI API URL">
       </div>
@@ -356,14 +365,52 @@
     // Global state
     let currentSuggestions = [];
     let config = {
+      aiProvider: 'azure-openai',
       apiEndpoint: 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
       apiKey: '', // API key handled server-side via environment variables
       analysisType: 'design-analysis'
     };
 
+    // Provider endpoints
+    const providerEndpoints = {
+      'azure-openai': 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
+      'azure-foundry': 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-foundry',
+      'custom': ''
+    };
+
+    // Load configuration from localStorage
+    function loadConfig() {
+      try {
+        const savedConfig = localStorage.getItem('cxs-ai-config');
+        if (savedConfig) {
+          const parsed = JSON.parse(savedConfig);
+          config = { ...config, ...parsed };
+        }
+      } catch (e) {
+        console.warn('Could not load config from localStorage:', e);
+      }
+      
+      // Update UI elements with loaded config
+      const aiProviderSelect = document.getElementById('aiProvider');
+      const apiEndpointInput = document.getElementById('apiEndpoint');
+      const apiKeyInput = document.getElementById('apiKey');
+      const analysisTypeSelect = document.getElementById('analysisType');
+      
+      if (aiProviderSelect) aiProviderSelect.value = config.aiProvider || 'azure-openai';
+      if (apiEndpointInput) apiEndpointInput.value = config.apiEndpoint;
+      if (apiKeyInput) apiKeyInput.value = config.apiKey || '';
+      if (analysisTypeSelect) analysisTypeSelect.value = config.analysisType;
+      
+      // Update provider settings
+      updateProviderSettings();
+    }
+
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
       console.log('✅ DOM Ready - Setting up UI...');
+      
+      // Load saved configuration
+      loadConfig();
       
       const analyzeBtn = document.getElementById('analyzeBtn');
       
@@ -619,21 +666,60 @@
     }
 
     function saveConfig() {
+      const aiProvider = document.getElementById('aiProvider')?.value;
       const apiEndpoint = document.getElementById('apiEndpoint')?.value;
       const apiKey = document.getElementById('apiKey')?.value;
       const analysisType = document.getElementById('analysisType')?.value;
       
+      if (aiProvider) config.aiProvider = aiProvider;
       if (apiEndpoint) config.apiEndpoint = apiEndpoint;
       if (apiKey) config.apiKey = apiKey;
       if (analysisType) config.analysisType = analysisType;
       
-      showMessage('Configuration saved!', 'success');
+      // Save to localStorage
+      try {
+        localStorage.setItem('cxs-ai-config', JSON.stringify(config));
+      } catch (e) {
+        console.warn('Could not save config to localStorage:', e);
+      }
+      
+      showMessage(`Configuration saved! Using ${aiProvider === 'azure-foundry' ? 'Azure AI Foundry Agent' : 'Azure OpenAI'}`, 'success');
       console.log('Config saved:', config);
+    }
+
+    function updateProviderSettings() {
+      const providerSelect = document.getElementById('aiProvider');
+      const endpointInput = document.getElementById('apiEndpoint');
+      
+      if (providerSelect && endpointInput) {
+        const selectedProvider = providerSelect.value;
+        const defaultEndpoint = providerEndpoints[selectedProvider];
+        
+        if (defaultEndpoint) {
+          endpointInput.value = defaultEndpoint;
+          endpointInput.disabled = selectedProvider !== 'custom';
+        } else {
+          endpointInput.disabled = false;
+        }
+        
+        // Update config
+        config.aiProvider = selectedProvider;
+        config.apiEndpoint = endpointInput.value;
+        
+        // Show provider-specific info
+        const loadingDiv = document.getElementById('loadingIndicator');
+        if (loadingDiv && selectedProvider === 'azure-foundry') {
+          loadingDiv.querySelector('span').textContent = 'Azure AI Foundry agent is analyzing your design...';
+        } else if (loadingDiv) {
+          loadingDiv.querySelector('span').textContent = 'AI is analyzing your design...';
+        }
+      }
     }
 
     // Expose for onclick handlers
     window.toggleConfig = toggleConfig;
     window.saveConfig = saveConfig;
+    window.updateProviderSettings = updateProviderSettings;
 
     console.log('📋 UI SCRIPT LOADED - Inline version');
   </script>
