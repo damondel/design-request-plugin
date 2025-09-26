@@ -1,0 +1,39 @@
+# Exclude node_modules from Azure Static Web App deployment
+node_modules/
+api/node_modules/
+
+# Exclude development files
+*.log
+*.tmp
+.env
+.env.*
+!.env.example
+
+# Exclude build artifacts that shouldn't be deployed
+*.tsbuildinfo
+.cache/
+dist/
+build/
+
+# Exclude large documentation and workspace files
+*.md
+!README.md
+*.code-workspace
+examples/
+docs/
+
+# Exclude git and CI/CD files
+.git/
+.github/
+.gitignore
+
+# Exclude editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Exclude OS files
+.DS_Store
+Thumbs.db
+desktop.ini
