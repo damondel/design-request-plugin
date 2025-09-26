@@ -81,6 +81,9 @@ coverage/
 .azure/
 *.publish
 
+# Azure Functions Local Settings (contains secrets)
+api/local.settings.json
+
 # Local development certificates
 *.pem
 *.key

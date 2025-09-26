@@ -3,9 +3,17 @@
 // Global state
 let currentSuggestions = [];
 let config = {
+    aiProvider: 'azure-openai',
     apiEndpoint: 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
     apiKey: '',
     analysisType: 'design-analysis'
+};
+
+// Provider endpoints
+const providerEndpoints = {
+    'azure-openai': 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
+    'azure-foundry': 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-foundry',
+    'custom': ''
 };
 // DOM elements
 const selectionCount = document.getElementById('selectionCount');
@@ -19,6 +27,7 @@ const configSection = document.getElementById('configSection');
 const apiEndpointInput = document.getElementById('apiEndpoint');
 const apiKeyInput = document.getElementById('apiKey');
 const analysisTypeSelect = document.getElementById('analysisType');
+const aiProviderSelect = document.getElementById('aiProvider');
 const debugBtn = document.getElementById('debugBtn');
 const forceBtn = document.getElementById('forceBtn');
 const debugOutput = document.getElementById('debugOutput');
@@ -33,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         forceBtn: !!forceBtn
     });
     loadConfig();
+    updateProviderSettings(); // Initialize provider settings
     setupEventListeners();
     // Test if buttons work with direct onclick
     if (forceBtn) {
@@ -70,17 +80,52 @@ function loadConfig() {
             apiEndpointInput.value = config.apiEndpoint;
             apiKeyInput.value = config.apiKey || '';
             analysisTypeSelect.value = config.analysisType;
+            if (aiProviderSelect) aiProviderSelect.value = config.aiProvider || 'azure-openai';
         }
     }
     catch (error) {
         console.error('Error loading config:', error);
     }
 }
+
+// Update provider settings based on selection
+function updateProviderSettings() {
+    console.log('🔄 updateProviderSettings called');
+    console.log('🔍 aiProviderSelect element:', aiProviderSelect);
+    console.log('🔍 apiEndpointInput element:', apiEndpointInput);
+    
+    const selectedProvider = aiProviderSelect?.value || config.aiProvider || 'azure-openai';
+    const endpoint = providerEndpoints[selectedProvider] || config.apiEndpoint;
+    
+    console.log('🎯 Selected provider:', selectedProvider);
+    console.log('🌐 Mapped endpoint:', endpoint);
+    console.log('📍 Available endpoints:', providerEndpoints);
+    
+    // Update the endpoint input with more robust checking
+    const endpointInput = apiEndpointInput || document.getElementById('apiEndpoint');
+    if (endpointInput) {
+        endpointInput.value = endpoint;
+        console.log('✅ Updated endpoint input to:', endpoint);
+    } else {
+        console.error('❌ Could not find endpoint input element');
+    }
+    
+    // Update config
+    config.aiProvider = selectedProvider;
+    config.apiEndpoint = endpoint;
+    
+    console.log('🔄 Provider updated to:', selectedProvider, 'Endpoint:', endpoint);
+}
+
+// Make updateProviderSettings globally accessible for HTML inline calls
+window.updateProviderSettings = updateProviderSettings;
+
 // Save configuration to localStorage
 function saveConfig() {
     config.apiEndpoint = apiEndpointInput.value.trim();
     config.apiKey = apiKeyInput.value.trim();
     config.analysisType = analysisTypeSelect.value;
+    if (aiProviderSelect) config.aiProvider = aiProviderSelect.value;
     try {
         localStorage.setItem('aiDesignAssistant_config', JSON.stringify(config));
         showSuccessMessage('Configuration saved successfully!');
@@ -127,6 +172,26 @@ function setupEventListeners() {
     apiEndpointInput.addEventListener('blur', saveConfig);
     apiKeyInput.addEventListener('blur', saveConfig);
     analysisTypeSelect.addEventListener('change', saveConfig);
+    
+    // AI Provider selection
+    if (aiProviderSelect) {
+        console.log('✅ Setting up AI provider event listener');
+        aiProviderSelect.addEventListener('change', (event) => {
+            console.log('🎯 Provider selection changed to:', event.target.value);
+            updateProviderSettings();
+            saveConfig();
+        });
+    } else {
+        console.error('❌ aiProviderSelect element not found during setup');
+    }
+    
+    // AI Provider selection
+    if (aiProviderSelect) {
+        aiProviderSelect.addEventListener('change', () => {
+            updateProviderSettings();
+            saveConfig();
+        });
+    }
 }
 // Handle messages from the main plugin
 window.onmessage = async (event) => {

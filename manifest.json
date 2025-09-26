@@ -21,6 +21,6 @@
       "http://localhost:3001",
       "https://localhost:3001"
     ],
-    "reasoning": "CXS AI Chat Request connects to Azure Static Web App API for design analysis and external AI services to provide contextual design analysis and suggestions. The plugin analyzes Figma design elements and returns intelligent recommendations based on CXS design requirements."
+    "reasoning": "CXS AI Chat Request connects to Azure Static Web App API for design analysis with multiple AI provider options including Azure AI Foundry agents and Azure OpenAI. The plugin analyzes Figma design elements and returns intelligent recommendations based on CXS design requirements with enhanced natural language processing and structured design suggestions."
   }
 }
