@@ -338,7 +338,7 @@
 
       <div class="input-group">
         <label for="apiEndpoint">AI API Endpoint:</label>
-        <input type="text" id="apiEndpoint" placeholder="API endpoint will be set based on provider selection">
+        <input type="text" id="apiEndpoint" placeholder="API endpoint will be set based on provider selection" style="width: 100%; font-size: 11px;">
       </div>
 
       <div class="input-group">
@@ -360,7 +360,7 @@
   </div>
 
   <script>
-    console.log('🚀 INLINE SCRIPT LOADING...');
+    console.log('🚀 INLINE SCRIPT LOADING - VERSION: SEPT 26 11:45 AM LOCAL TEST');
     
     // Global state
     let currentSuggestions = [];
@@ -427,6 +427,25 @@
       }
 
       console.log('✅ All button handlers attached!');
+
+      // Set up provider selector debugging and event handling
+      const providerSelect = document.getElementById('aiProvider');
+      if (providerSelect) {
+        console.log('🎯 Provider select found, current value:', providerSelect.value);
+        console.log('🔍 Available endpoints:', providerEndpoints);
+        
+        // Add change listener (backup to onchange in HTML)
+        providerSelect.addEventListener('change', function(e) {
+          console.log('🚨 PROVIDER CHANGED TO:', e.target.value);
+          updateProviderSettings();
+        });
+        
+        // Force initial update
+        console.log('🔄 Calling updateProviderSettings() on load');
+        updateProviderSettings();
+      } else {
+        console.error('❌ Provider select NOT FOUND in DOM');
+      }
 
       // Request initial selection data
       parent.postMessage({ pluginMessage: { type: 'get-selection-data' } }, '*');
@@ -689,6 +708,10 @@
 
     function updateProviderSettings() {
       console.log('🔄 updateProviderSettings() called');
+      
+      // Visual indicator that function is running
+      document.title = 'Provider Update: ' + new Date().toLocaleTimeString();
+      
       const providerSelect = document.getElementById('aiProvider');
       const endpointInput = document.getElementById('apiEndpoint');
       
@@ -709,9 +732,14 @@
         });
         
         if (defaultEndpoint) {
+          console.log('🔄 Setting endpoint input value from:', endpointInput.value, 'to:', defaultEndpoint);
           endpointInput.value = defaultEndpoint;
           endpointInput.disabled = selectedProvider !== 'custom';
           console.log('✅ Updated endpoint to:', defaultEndpoint);
+          console.log('✅ Input now shows:', endpointInput.value);
+          
+          // Force the visual update
+          endpointInput.dispatchEvent(new Event('input'));
         } else {
           endpointInput.disabled = false;
           console.log('⚠️ No default endpoint found for provider:', selectedProvider);
