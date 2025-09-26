@@ -338,7 +338,7 @@
 
       <div class="input-group">
         <label for="apiEndpoint">AI API Endpoint:</label>
-        <input type="text" id="apiEndpoint" value="https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous" placeholder="Enter your AI API URL">
+        <input type="text" id="apiEndpoint" placeholder="API endpoint will be set based on provider selection">
       </div>
 
       <div class="input-group">
@@ -688,18 +688,33 @@
     }
 
     function updateProviderSettings() {
+      console.log('🔄 updateProviderSettings() called');
       const providerSelect = document.getElementById('aiProvider');
       const endpointInput = document.getElementById('apiEndpoint');
+      
+      console.log('🔍 Elements found:', {
+        providerSelect: !!providerSelect,
+        endpointInput: !!endpointInput,
+        selectedValue: providerSelect?.value
+      });
       
       if (providerSelect && endpointInput) {
         const selectedProvider = providerSelect.value;
         const defaultEndpoint = providerEndpoints[selectedProvider];
         
+        console.log('🎯 Provider mapping:', {
+          selectedProvider,
+          defaultEndpoint,
+          allEndpoints: providerEndpoints
+        });
+        
         if (defaultEndpoint) {
           endpointInput.value = defaultEndpoint;
           endpointInput.disabled = selectedProvider !== 'custom';
+          console.log('✅ Updated endpoint to:', defaultEndpoint);
         } else {
           endpointInput.disabled = false;
+          console.log('⚠️ No default endpoint found for provider:', selectedProvider);
         }
         
         // Update config
