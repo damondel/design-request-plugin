@@ -8,20 +8,21 @@ const {
 } = require('../server-utils');
 
 module.exports = async function (context, req) {
+    // Set CORS headers IMMEDIATELY for Figma plugin
+    const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, Accept, Origin, X-Requested-With",
+        "Access-Control-Max-Age": "86400"
+    };
+    
+    context.res = {
+        headers: corsHeaders
+    };
+    
     context.log('Azure AI Foundry API function triggered.');
     
     try {
-        // Set CORS headers for Figma plugin (match working analyze-anonymous function)
-        const corsHeaders = {
-            "Access-Control-Allow-Origin": "https://www.figma.com",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
-            "Access-Control-Max-Age": "86400"
-        };
-        
-        context.res = {
-            headers: corsHeaders
-        };
 
         // Handle OPTIONS request for CORS preflight
         if (req.method === 'OPTIONS') {

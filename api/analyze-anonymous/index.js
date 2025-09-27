@@ -1,20 +1,21 @@
 const { callAzureOpenAI, /* callAzureAIFoundryAgent, */ generateMockAIResponse, parseColorValueForFigma, parseNumericValueFromAI } = require('../server-utils');
 
 module.exports = async function (context, req) {
-    context.log('Anonymous API function triggered.');
+    // Set CORS headers IMMEDIATELY for Figma plugin
+    const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, Accept, Origin, X-Requested-With",
+        "Access-Control-Max-Age": "86400"
+    };
+    
+    context.res = {
+        headers: corsHeaders
+    };
+    
+    context.log('Azure Anonymous API function triggered.');
     
     try {
-        // Set CORS headers for Figma plugin (same as working test endpoint)
-        const corsHeaders = {
-            "Access-Control-Allow-Origin": "https://www.figma.com",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
-            "Access-Control-Max-Age": "86400"
-        };
-        
-        context.res = {
-            headers: corsHeaders
-        };
 
         // Handle OPTIONS request for CORS preflight
         if (req.method === 'OPTIONS') {
