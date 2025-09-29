@@ -524,19 +524,19 @@ async function handleAIRequest(request, provider, config) {
             throw new Error(`Health check failed: ${healthResponse.status} - ${healthError}`);
         }
         
-        // Determine endpoint based on provider
+        // Determine endpoint based on provider - use CORS proxy
         const baseUrl = config.apiEndpoint || 'https://delightful-pebble-004e7300f.1.azurestaticapps.net';
         let endpoint;
         if (provider === 'azure-foundry') {
-            endpoint = `${baseUrl}/api/analyze-foundry`;
+            endpoint = `${baseUrl}/api/cors-proxy?target=azure-foundry`;
         } else {
-            endpoint = `${baseUrl}/api/analyze-anonymous`;
+            endpoint = `${baseUrl}/api/cors-proxy?target=analyze-anonymous`;
         }
         
         console.log('🔍 DEBUGGING ENDPOINT CONSTRUCTION:');
         console.log('  Provider:', provider);
         console.log('  Config baseUrl:', config.apiEndpoint);
-        console.log('  Final constructed endpoint:', endpoint);
+        console.log('  Final constructed endpoint (via CORS proxy):', endpoint);
         console.log('🌐 Making actual AI request...');
         console.log('🔍 Request details:', {
             endpoint,
