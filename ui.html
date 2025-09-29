@@ -537,12 +537,25 @@
       
       // Get current configuration from UI
       const provider = document.getElementById('aiProvider')?.value || 'azure-openai';
-      const apiEndpoint = document.getElementById('apiEndpoint')?.value || config.apiEndpoint;
+      const apiEndpointInput = document.getElementById('apiEndpoint')?.value;
       const apiKey = document.getElementById('apiKey')?.value || config.apiKey;
+      
+      // Determine base URL from provider or input
+      let baseUrl = 'https://delightful-pebble-004e7300f.1.azurestaticapps.net';
+      
+      // If user has manually entered an endpoint, extract base URL
+      if (apiEndpointInput && apiEndpointInput.trim()) {
+        if (apiEndpointInput.includes('/api/analyze-')) {
+          // Extract base URL from full endpoint
+          baseUrl = apiEndpointInput.replace(/\/api\/analyze-.*$/, '');
+        } else {
+          baseUrl = apiEndpointInput;
+        }
+      }
       
       const currentConfig = {
         provider: provider,
-        apiEndpoint: apiEndpoint,
+        apiEndpoint: baseUrl, // Send base URL only, let main thread append provider-specific path
         apiKey: apiKey || 'test-api-key-12345'
       };
       

@@ -533,12 +533,10 @@ async function handleAIRequest(request, provider, config) {
             endpoint = `${baseUrl}/api/analyze-anonymous`;
         }
         
-        // Clean up endpoint if baseUrl already contains the path
-        if (baseUrl.includes('/api/')) {
-            endpoint = baseUrl;
-        }
-        
-        console.log('📡 Final endpoint:', endpoint);
+        console.log('🔍 DEBUGGING ENDPOINT CONSTRUCTION:');
+        console.log('  Provider:', provider);
+        console.log('  Config baseUrl:', config.apiEndpoint);
+        console.log('  Final constructed endpoint:', endpoint);
         console.log('🌐 Making actual AI request...');
         
         // Use Figma's Fetch API (no CORS restrictions)
