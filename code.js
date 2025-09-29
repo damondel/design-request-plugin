@@ -538,8 +538,31 @@ async function handleAIRequest(request, provider, config) {
         console.log('  Config baseUrl:', config.apiEndpoint);
         console.log('  Final constructed endpoint:', endpoint);
         console.log('🌐 Making actual AI request...');
+        console.log('🔍 Request details:', {
+            endpoint,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            bodyPreview: JSON.stringify(request).substring(0, 200) + '...'
+        });
         
-        // Use Figma's Fetch API (no CORS restrictions)
+        // Try a minimal test request first to isolate the issue
+        console.log('🧪 First, trying a minimal test request...');
+        try {
+            const testResponse = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ test: true, message: 'simple test' })
+            });
+            console.log('✅ Test request succeeded:', testResponse.status);
+        } catch (testError) {
+            console.error('❌ Test request failed:', testError);
+            throw new Error(`Minimal test failed: ${testError.message}`);
+        }
+        
+        // Now try the actual request
+        console.log('🚀 Now trying actual request...');
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -548,7 +571,7 @@ async function handleAIRequest(request, provider, config) {
             body: JSON.stringify(request)
         });
         
-        console.log('📥 Response status:', response.status, response.statusText);
+        console.log('📥 Response received! Status:', response.status, response.statusText);
         
         if (!response.ok) {
             const errorText = await response.text();
