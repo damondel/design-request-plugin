@@ -493,15 +493,38 @@ function updateSelectionData() {
 // Handle AI request using Figma's Fetch API (avoids CORS issues)
 async function handleAIRequest(request, provider, config) {
     console.log('🚀 Making AI request directly from main thread:', provider);
+    console.log('🔍 Request details:', request);
+    console.log('⚙️ Config details:', config);
     
     try {
+        // First test with health endpoint to verify connectivity
+        const healthUrl = 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/health';
+        console.log('🏥 Testing health endpoint first:', healthUrl);
+        
+        const healthResponse = await fetch(healthUrl);
+        console.log('🏥 Health check status:', healthResponse.status);
+        
+        if (healthResponse.ok) {
+            const healthData = await healthResponse.json();
+            console.log('✅ Health check successful:', healthData);
+        }
+        
         // Determine endpoint based on provider
         const baseUrl = config.apiEndpoint || 'https://delightful-pebble-004e7300f.1.azurestaticapps.net';
-        const endpoint = provider === 'azure-foundry' 
-            ? `${baseUrl}/api/analyze-foundry`
-            : `${baseUrl}/api/analyze-anonymous`;
+        let endpoint;
+        if (provider === 'azure-foundry') {
+            endpoint = `${baseUrl}/api/analyze-foundry`;
+        } else {
+            endpoint = `${baseUrl}/api/analyze-anonymous`;
+        }
         
-        console.log('📡 Calling endpoint:', endpoint);
+        // Clean up endpoint if baseUrl already contains the path
+        if (baseUrl.includes('/api/')) {
+            endpoint = baseUrl;
+        }
+        
+        console.log('📡 Final endpoint:', endpoint);
+        console.log('🌐 Using Figma fetch API from main thread (should bypass CORS)');
         
         // Use Figma's Fetch API (no CORS restrictions)
         const response = await fetch(endpoint, {
@@ -512,8 +535,12 @@ async function handleAIRequest(request, provider, config) {
             body: JSON.stringify(request)
         });
         
+        console.log('📥 Response status:', response.status, response.statusText);
+        
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('❌ Response error body:', errorText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
         }
         
         const result = await response.json();
@@ -527,7 +554,12 @@ async function handleAIRequest(request, provider, config) {
         });
         
     } catch (error) {
-        console.error('❌ AI request failed:', error);
+        console.error('❌ AI request failed in main thread:', error);
+        console.error('❌ Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
         
         // Send error back to UI
         figma.ui.postMessage({
