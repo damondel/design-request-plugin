@@ -14,11 +14,17 @@ figma.ui.onmessage = async (msg) => {
         case 'analyze-selection':
             await handleAnalyzeSelection();
             break;
+        case 'make-ai-request':
+            await handleAIRequest(msg.request, msg.provider, msg.config);
+            break;
         case 'apply-suggestion':
             await handleApplySuggestion(msg.suggestion);
             break;
         case 'close-plugin':
             figma.closePlugin();
+            break;
+        case 'get-selection-data':
+            sendSelectionData();
             break;
         default:
             console.log('Unknown message type:', msg.type);
@@ -64,9 +70,9 @@ async function handleAnalyzeSelection() {
             context: `Analyzing ${allNodes.length} elements (${selection.length} selected + children) from ${figma.editorType === 'figma' ? 'Figma design' : 'FigJam'}`
         }
     };
-    // Send to UI for API call (UI handles external network requests)
+    // Send to UI to get configuration, then make AI request directly
     figma.ui.postMessage({
-        type: 'make-ai-request',
+        type: 'get-ai-config',
         request: aiRequest
     });
 }
@@ -483,6 +489,60 @@ function updateSelectionData() {
         data: selectionData
     });
 }
+
+// Handle AI request using Figma's Fetch API (avoids CORS issues)
+async function handleAIRequest(request, provider, config) {
+    console.log('🚀 Making AI request directly from main thread:', provider);
+    
+    try {
+        // Determine endpoint based on provider
+        const baseUrl = config.apiEndpoint || 'https://delightful-pebble-004e7300f.1.azurestaticapps.net';
+        const endpoint = provider === 'azure-foundry' 
+            ? `${baseUrl}/api/analyze-foundry`
+            : `${baseUrl}/api/analyze-anonymous`;
+        
+        console.log('📡 Calling endpoint:', endpoint);
+        
+        // Use Figma's Fetch API (no CORS restrictions)
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(request)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ AI request successful:', result);
+        
+        // Send result back to UI
+        figma.ui.postMessage({
+            type: 'ai-response',
+            result: result,
+            provider: provider
+        });
+        
+    } catch (error) {
+        console.error('❌ AI request failed:', error);
+        
+        // Send error back to UI
+        figma.ui.postMessage({
+            type: 'ai-error',
+            error: error.message,
+            provider: provider
+        });
+    }
+}
+
+// Send current selection data to UI
+function sendSelectionData() {
+    updateSelectionData();
+}
+
 // Handle selection changes
 figma.on('selectionchange', () => {
     updateSelectionData();
