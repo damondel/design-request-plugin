@@ -1,14 +1,17 @@
 const { callAzureOpenAI, /* callAzureAIFoundryAgent, */ generateMockAIResponse, parseColorValueForFigma, parseNumericValueFromAI } = require('../server-utils');
 
 module.exports = async function (context, req) {
-    // Set CORS headers IMMEDIATELY for Figma plugin
+    // Set CORS headers IMMEDIATELY for Figma plugin - most permissive possible
     const corsHeaders = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, Accept, Origin, X-Requested-With",
-        "Access-Control-Max-Age": "86400"
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Expose-Headers": "*",
+        "Access-Control-Max-Age": "86400",
+        "Access-Control-Allow-Credentials": "false"
     };
     
+    // Set headers immediately
     context.res = {
         headers: corsHeaders
     };
