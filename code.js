@@ -497,9 +497,19 @@ async function handleAIRequest(request, provider, config) {
     console.log('⚙️ Config details:', config);
     
     try {
-        // First test with health endpoint to verify connectivity
+        // Test with a known CORS-friendly endpoint first
+        console.log('🧪 Testing with CORS-friendly endpoint first...');
+        const testResponse = await fetch('https://httpbin.org/get');
+        console.log('🧪 Test fetch status:', testResponse.status);
+        
+        if (testResponse.ok) {
+            const testData = await testResponse.json();
+            console.log('✅ Test fetch successful - Figma fetch API is working');
+        }
+        
+        // Now try our health endpoint
         const healthUrl = 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/health';
-        console.log('🏥 Testing health endpoint first:', healthUrl);
+        console.log('🏥 Testing health endpoint:', healthUrl);
         
         const healthResponse = await fetch(healthUrl);
         console.log('🏥 Health check status:', healthResponse.status);
@@ -507,6 +517,11 @@ async function handleAIRequest(request, provider, config) {
         if (healthResponse.ok) {
             const healthData = await healthResponse.json();
             console.log('✅ Health check successful:', healthData);
+        } else {
+            console.error('❌ Health check failed:', healthResponse.status, healthResponse.statusText);
+            const healthError = await healthResponse.text();
+            console.error('❌ Health error body:', healthError);
+            throw new Error(`Health check failed: ${healthResponse.status} - ${healthError}`);
         }
         
         // Determine endpoint based on provider
@@ -524,7 +539,7 @@ async function handleAIRequest(request, provider, config) {
         }
         
         console.log('📡 Final endpoint:', endpoint);
-        console.log('🌐 Using Figma fetch API from main thread (should bypass CORS)');
+        console.log('🌐 Making actual AI request...');
         
         // Use Figma's Fetch API (no CORS restrictions)
         const response = await fetch(endpoint, {

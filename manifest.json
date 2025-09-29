@@ -15,7 +15,8 @@
       "https://delightful-pebble-004e7300f.1.azurestaticapps.net",
       "https://api.openai.com",
       "https://api.replicate.com",
-      "https://huggingface.co"
+      "https://huggingface.co",
+      "https://httpbin.org"
     ],
     "devAllowedDomains": [
       "http://localhost:3001",
