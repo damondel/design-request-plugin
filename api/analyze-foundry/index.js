@@ -11,16 +11,9 @@ module.exports = async function (context, req) {
     // Set CORS headers IMMEDIATELY for Figma plugin - most permissive possible
     const corsHeaders = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "*",
-        "Access-Control-Allow-Headers": "*",
-        "Access-Control-Expose-Headers": "*",
-        "Access-Control-Max-Age": "86400",
-        "Access-Control-Allow-Credentials": "false"
-    };
-    
-    // Set headers immediately
-    context.res = {
-        headers: corsHeaders
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+        "Access-Control-Max-Age": "86400"
     };
     
     context.log('Azure AI Foundry API function triggered.');
@@ -32,9 +25,8 @@ module.exports = async function (context, req) {
             context.res = {
                 status: 200,
                 headers: corsHeaders,
-                body: {}
+                body: null
             };
-            context.done();
             return;
         }
 
@@ -169,23 +161,29 @@ module.exports = async function (context, req) {
         }).filter(suggestion => suggestion !== null);
 
         // Response format
-        context.res.status = 200;
-        context.res.body = {
-            success: true,
-            suggestions: enhancedSuggestions,
-            source: 'Azure AI Foundry Agent'
+        context.res = {
+            status: 200,
+            headers: corsHeaders,
+            body: {
+                success: true,
+                suggestions: enhancedSuggestions,
+                source: 'Azure AI Foundry Agent'
+            }
         };
         
     } catch (error) {
         context.log.error(`Azure AI Foundry analysis error: ${error.message}`);
         
         // Always provide a fallback response
-        context.res.status = 200;
-        context.res.body = {
-            success: true,
-            suggestions: generateMockAIResponse([]).suggestions || [],
-            message: 'Using fallback analysis due to Azure AI Foundry error',
-            source: 'Mock Fallback'
+        context.res = {
+            status: 200,
+            headers: corsHeaders,
+            body: {
+                success: true,
+                suggestions: generateMockAIResponse([]).suggestions || [],
+                message: 'Using fallback analysis due to Azure AI Foundry error',
+                source: 'Mock Fallback'
+            }
         };
     }
 };

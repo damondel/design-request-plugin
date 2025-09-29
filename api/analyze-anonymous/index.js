@@ -4,16 +4,9 @@ module.exports = async function (context, req) {
     // Set CORS headers IMMEDIATELY for Figma plugin - most permissive possible
     const corsHeaders = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "*",
-        "Access-Control-Allow-Headers": "*",
-        "Access-Control-Expose-Headers": "*",
-        "Access-Control-Max-Age": "86400",
-        "Access-Control-Allow-Credentials": "false"
-    };
-    
-    // Set headers immediately
-    context.res = {
-        headers: corsHeaders
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+        "Access-Control-Max-Age": "86400"
     };
     
     context.log('Azure Anonymous API function triggered.');
@@ -25,9 +18,8 @@ module.exports = async function (context, req) {
             context.res = {
                 status: 200,
                 headers: corsHeaders,
-                body: {}
+                body: null
             };
-            context.done();
             return;
         }
 
