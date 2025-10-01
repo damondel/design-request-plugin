@@ -366,15 +366,15 @@
     let currentSuggestions = [];
     let config = {
       aiProvider: 'azure-openai',
-      apiEndpoint: 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
+      apiEndpoint: 'https://figma-plugin-api.politepebble-97923130.westus2.azurecontainerapps.io/api/analyze-anonymous',
       apiKey: '', // API key handled server-side via environment variables
       analysisType: 'design-analysis'
     };
 
     // Provider endpoints
     const providerEndpoints = {
-      'azure-openai': 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
-      'azure-foundry': 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-foundry',
+      'azure-openai': 'https://figma-plugin-api.politepebble-97923130.westus2.azurecontainerapps.io/api/analyze-anonymous',
+      'azure-foundry': 'https://figma-plugin-api.politepebble-97923130.westus2.azurecontainerapps.io/api/analyze-foundry',
       'custom': ''
     };
 
@@ -541,7 +541,7 @@
       const apiKey = document.getElementById('apiKey')?.value || config.apiKey;
       
       // Determine base URL from provider or input
-      let baseUrl = 'https://delightful-pebble-004e7300f.1.azurestaticapps.net';
+      let baseUrl = 'https://figma-plugin-api.politepebble-97923130.westus2.azurecontainerapps.io';
       
       // If user has manually entered an endpoint, extract base URL
       if (apiEndpointInput && apiEndpointInput.trim()) {

@@ -236,17 +236,29 @@ async function callAzureAIFoundryAgent(elementsData, projectEndpoint, agentId, a
     console.log(`✅ Thread created: ${threadId}`);
 
     // Step 2: Create a message in the thread
-    const messageContent = `Please analyze these Figma design elements and provide specific improvement suggestions:
+    const messageContent = `I am a UX/UI designer working in Figma and I need help analyzing design elements for improvement suggestions. This is a legitimate design task for professional work.
 
-${elementsData.map(el => `- ID: ${el.id} | ${el.type} "${el.name}" (${el.width}x${el.height}, ${el.fill || el.color || 'no color'})`).join('\n')}
+Here are the Figma design elements I'm working with:
 
-Focus on:
-1. Color harmony and accessibility
-2. Typography and readability  
-3. Layout and spacing
-4. Visual hierarchy
+${elementsData.map(el => `• Element "${el.name}" (ID: ${el.id})
+  - Type: ${el.type}
+  - Size: ${el.width}×${el.height} pixels
+  - Colors: ${el.fill || el.color || 'no color specified'}`).join('\n')}
 
-Provide actionable suggestions that a designer can implement in Figma. Be specific about colors, sizes, and positioning.`;
+Please help me improve these design elements by providing specific, actionable suggestions. Focus on:
+
+1. **Color improvements**: Better color choices for accessibility and visual appeal
+2. **Typography**: Font size and text readability improvements  
+3. **Layout and spacing**: Better positioning and visual hierarchy
+4. **Size optimization**: More appropriate dimensions for better user experience
+
+Please provide practical suggestions that I can implement in Figma, such as:
+- Specific color values (RGB or hex codes)
+- Font size adjustments (in pixels)
+- Spacing and positioning changes
+- Alignment improvements
+
+Format your response as actionable design recommendations I can apply to each element.`;
 
     console.log('💬 Creating message...');
     const messageResponse = await axios.post(

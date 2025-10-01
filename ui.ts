@@ -10,7 +10,7 @@ interface Config {
 // Global state
 let currentSuggestions: any[] = [];
 let config: Config = {
-  apiEndpoint: 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/analyze-anonymous',
+  apiEndpoint: 'https://figma-plugin-api.politepebble-97923130.westus2.azurecontainerapps.io/api/analyze-anonymous',
   apiKey: '',
   analysisType: 'design-analysis'
 };
@@ -167,7 +167,8 @@ window.onmessage = async (event) => {
       break;
     
     case 'make-ai-request':
-      await handleAIRequest(message.request);
+      // Note: This is handled by the main thread now, not the UI
+      console.log('make-ai-request message received but handled by main thread');
       break;
     
     case 'suggestion-applied':
@@ -208,63 +209,8 @@ function hideLoading() {
   analyzeBtn.disabled = false;
 }
 
-// Make request to AI API
-async function handleAIRequest(request: any) {
-  try {
-    console.log('Making AI request to:', config.apiEndpoint);
-    console.log('Request data:', request);
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    // Add API key if provided
-    if (config.apiKey) {
-      headers['Authorization'] = `Bearer ${config.apiKey}`;
-    }
-
-    // Transform the request to match Azure Static Web App API format
-    const apiRequest = {
-      elements: request.data?.elements || request.elements || [],
-      type: config.analysisType,
-      data: request.data
-    };
-
-    console.log('Transformed API request:', apiRequest);
-
-    const response = await fetch(config.apiEndpoint, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(apiRequest)
-    });
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-    }
-
-    const aiResponse = await response.json();
-    console.log('AI response:', aiResponse);
-
-    hideLoading();
-
-    if (aiResponse.success) {
-      displaySuggestions(aiResponse.suggestions);
-      showSuccessMessage(`Received ${aiResponse.suggestions.length} AI suggestions!`);
-    } else {
-      showErrorMessage(aiResponse.error || 'AI analysis failed');
-    }
-
-  } catch (error) {
-    console.error('AI request error:', error);
-    hideLoading();
-    
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      showErrorMessage('Cannot connect to AI service. Please check your API endpoint and internet connection.');
-    } else {
-      showErrorMessage(`AI request failed: ${error}`);
-    }
-  }
-}
+// Note: handleAIRequest has been moved to the main thread (code.ts) to avoid CORS issues
+// The UI now uses the new architecture where main thread handles network requests
 
 // Display AI suggestions
 function displaySuggestions(suggestions: any[]) {

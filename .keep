@@ -1,0 +1,21 @@
+# Files to keep
+*.ts
+*.js
+*.html
+*.json
+*.md
+*.env.example
+Dockerfile
+.gitignore
+
+# Important directories
+api/
+node_modules/
+
+# Generated files (can be rebuilt)
+*.js.map
+
+# Documentation
+DEPLOYMENT_GUIDE.md
+PROJECT_JOURNEY.md
+README.md

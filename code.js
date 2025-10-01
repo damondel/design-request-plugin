@@ -70,7 +70,7 @@ async function handleAnalyzeSelection() {
             context: `Analyzing ${allNodes.length} elements (${selection.length} selected + children) from ${figma.editorType === 'figma' ? 'Figma design' : 'FigJam'}`
         }
     };
-    // Send to UI to get configuration, then make AI request directly
+    // Send to UI to get configuration, then make AI request
     figma.ui.postMessage({
         type: 'get-ai-config',
         request: aiRequest
@@ -489,80 +489,39 @@ function updateSelectionData() {
         data: selectionData
     });
 }
-
 // Handle AI request using Figma's Fetch API (avoids CORS issues)
 async function handleAIRequest(request, provider, config) {
     console.log('🚀 Making AI request directly from main thread:', provider);
     console.log('🔍 Request details:', request);
     console.log('⚙️ Config details:', config);
-    
     try {
-        // Test with a known CORS-friendly endpoint first
-        console.log('🧪 Testing with CORS-friendly endpoint first...');
-        const testResponse = await fetch('https://httpbin.org/get');
-        console.log('🧪 Test fetch status:', testResponse.status);
-        
-        if (testResponse.ok) {
-            const testData = await testResponse.json();
-            console.log('✅ Test fetch successful - Figma fetch API is working');
+        // Send loading message to UI immediately
+        figma.ui.postMessage({
+            type: 'success',
+            message: 'Starting AI analysis...'
+        });
+        // Test basic connectivity first
+        console.log('🧪 Testing basic connectivity...');
+        // Use a simple test first
+        const testUrl = 'https://httpbin.org/get';
+        console.log('Testing with:', testUrl);
+        const testResponse = await fetch(testUrl);
+        console.log('🧪 Test response status:', testResponse.status);
+        if (!testResponse.ok) {
+            throw new Error(`Test connectivity failed: ${testResponse.status}`);
         }
-        
-        // Now try our health endpoint
-        const healthUrl = 'https://delightful-pebble-004e7300f.1.azurestaticapps.net/api/health';
-        console.log('🏥 Testing health endpoint:', healthUrl);
-        
-        const healthResponse = await fetch(healthUrl);
-        console.log('🏥 Health check status:', healthResponse.status);
-        
-        if (healthResponse.ok) {
-            const healthData = await healthResponse.json();
-            console.log('✅ Health check successful:', healthData);
-        } else {
-            console.error('❌ Health check failed:', healthResponse.status, healthResponse.statusText);
-            const healthError = await healthResponse.text();
-            console.error('❌ Health error body:', healthError);
-            throw new Error(`Health check failed: ${healthResponse.status} - ${healthError}`);
-        }
-        
-        // Determine endpoint based on provider - use local development for testing
-        const baseUrl = config.apiEndpoint || 'http://localhost:7071';
+        console.log('✅ Basic connectivity works');
+        // Now try our API
+        const baseUrl = config.apiEndpoint || 'https://figma-plugin-api.politepebble-97923130.westus2.azurecontainerapps.io';
         let endpoint;
         if (provider === 'azure-foundry') {
             endpoint = `${baseUrl}/api/analyze-foundry`;
-        } else {
+        }
+        else {
             endpoint = `${baseUrl}/api/analyze-anonymous`;
         }
-        
-        console.log('🔍 DEBUGGING ENDPOINT CONSTRUCTION:');
-        console.log('  Provider:', provider);
-        console.log('  Config baseUrl:', config.apiEndpoint);
-        console.log('  Final constructed endpoint (LOCAL TESTING):', endpoint);
-        console.log('🌐 Making actual AI request...');
-        console.log('🔍 Request details:', {
-            endpoint,
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            bodyPreview: JSON.stringify(request).substring(0, 200) + '...'
-        });
-        
-        // Try a minimal test request first to isolate the issue
-        console.log('🧪 First, trying a minimal test request...');
-        try {
-            const testResponse = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ test: true, message: 'simple test' })
-            });
-            console.log('✅ Test request succeeded:', testResponse.status);
-        } catch (testError) {
-            console.error('❌ Test request failed:', testError);
-            throw new Error(`Minimal test failed: ${testError.message}`);
-        }
-        
-        // Now try the actual request
-        console.log('🚀 Now trying actual request...');
+        console.log('🔍 Final endpoint:', endpoint);
+        console.log('🌐 Making AI request...');
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -570,47 +529,36 @@ async function handleAIRequest(request, provider, config) {
             },
             body: JSON.stringify(request)
         });
-        
-        console.log('📥 Response received! Status:', response.status, response.statusText);
-        
+        console.log('📥 Response status:', response.status, response.statusText);
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Response error body:', errorText);
+            console.error('❌ Response error:', errorText);
             throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
         }
-        
         const result = await response.json();
         console.log('✅ AI request successful:', result);
-        
         // Send result back to UI
         figma.ui.postMessage({
             type: 'ai-response',
             result: result,
             provider: provider
         });
-        
-    } catch (error) {
-        console.error('❌ AI request failed in main thread:', error);
-        console.error('❌ Error details:', {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-        });
-        
+    }
+    catch (error) {
+        console.error('❌ AI request failed:', error);
+        console.error('❌ Error stack:', error.stack);
         // Send error back to UI
         figma.ui.postMessage({
             type: 'ai-error',
-            error: error.message,
+            error: error.message || 'Network request failed',
             provider: provider
         });
     }
 }
-
 // Send current selection data to UI
 function sendSelectionData() {
     updateSelectionData();
 }
-
 // Handle selection changes
 figma.on('selectionchange', () => {
     updateSelectionData();

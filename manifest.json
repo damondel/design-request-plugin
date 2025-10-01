@@ -12,6 +12,7 @@
   ],
   "networkAccess": {
     "allowedDomains": [
+      "https://figma-plugin-api.politepebble-97923130.westus2.azurecontainerapps.io",
       "https://delightful-pebble-004e7300f.1.azurestaticapps.net",
       "https://api.openai.com",
       "https://api.replicate.com",

@@ -26,7 +26,7 @@ DEMO_SCRIPT.md
 GITHUB_READY.md
 
 # IDE and Editor Files
-.vscode/
+
 .idea/
 *.swp
 *.swo

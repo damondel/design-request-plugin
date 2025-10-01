@@ -54,12 +54,20 @@ figma.ui.onmessage = async (msg) => {
       await handleAnalyzeSelection();
       break;
     
+    case 'make-ai-request':
+      await handleAIRequest(msg.request, msg.provider, msg.config);
+      break;
+    
     case 'apply-suggestion':
       await handleApplySuggestion(msg.suggestion);
       break;
     
     case 'close-plugin':
       figma.closePlugin();
+      break;
+    
+    case 'get-selection-data':
+      sendSelectionData();
       break;
     
     default:
@@ -115,9 +123,9 @@ async function handleAnalyzeSelection() {
     }
   };
 
-  // Send to UI for API call (UI handles external network requests)
+  // Send to UI to get configuration, then make AI request
   figma.ui.postMessage({
-    type: 'make-ai-request',
+    type: 'get-ai-config',
     request: aiRequest
   });
 }
@@ -555,6 +563,91 @@ function updateSelectionData() {
     type: 'selection-data',
     data: selectionData
   });
+}
+
+// Handle AI request using Figma's Fetch API (avoids CORS issues)
+async function handleAIRequest(request: AIRequest, provider: string, config: any) {
+  console.log('🚀 Making AI request directly from main thread:', provider);
+  console.log('🔍 Request details:', request);
+  console.log('⚙️ Config details:', config);
+  
+  try {
+    // Send loading message to UI immediately
+    figma.ui.postMessage({
+      type: 'success',
+      message: 'Starting AI analysis...'
+    });
+    
+    // Test basic connectivity first
+    console.log('🧪 Testing basic connectivity...');
+    
+    // Use a simple test first
+    const testUrl = 'https://httpbin.org/get';
+    console.log('Testing with:', testUrl);
+    
+    const testResponse = await fetch(testUrl);
+    console.log('🧪 Test response status:', testResponse.status);
+    
+    if (!testResponse.ok) {
+      throw new Error(`Test connectivity failed: ${testResponse.status}`);
+    }
+    
+    console.log('✅ Basic connectivity works');
+    
+    // Now try our API
+    const baseUrl = config.apiEndpoint || 'https://figma-plugin-api.politepebble-97923130.westus2.azurecontainerapps.io';
+    let endpoint: string;
+    if (provider === 'azure-foundry') {
+      endpoint = `${baseUrl}/api/analyze-foundry`;
+    } else {
+      endpoint = `${baseUrl}/api/analyze-anonymous`;
+    }
+    
+    console.log('🔍 Final endpoint:', endpoint);
+    console.log('🌐 Making AI request...');
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request)
+    });
+    
+    console.log('📥 Response status:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Response error:', errorText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ AI request successful:', result);
+    
+    // Send result back to UI
+    figma.ui.postMessage({
+      type: 'ai-response',
+      result: result,
+      provider: provider
+    });
+    
+  } catch (error) {
+    console.error('❌ AI request failed:', error);
+    console.error('❌ Error stack:', (error as Error).stack);
+    
+    // Send error back to UI
+    figma.ui.postMessage({
+      type: 'ai-error',
+      error: (error as Error).message || 'Network request failed',
+      provider: provider
+    });
+  }
+}
+
+// Send current selection data to UI
+function sendSelectionData() {
+  updateSelectionData();
 }
 
 // Handle selection changes
