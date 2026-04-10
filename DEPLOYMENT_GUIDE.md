@@ -1,12 +1,12 @@
 # 🚀 Figma AI Design Assistant - Deployment Guide
 
 ## Overview
-This guide helps you deploy a Figma plugin that uses Azure AI Foundry agents to analyze designs and provide improvement suggestions.
+This guide helps you deploy a Figma plugin that uses Microsoft Foundry agents to analyze designs and provide improvement suggestions.
 
 ## Architecture
 - **Plugin**: TypeScript Figma plugin with UI
 - **Backend**: Express.js server on Azure Container Apps  
-- **AI**: Azure AI Foundry agent (REST API)
+- **AI**: Microsoft Foundry agent (REST API)
 - **Cost**: ~$2-5/month (Container Apps scales to zero)
 
 ## Prerequisites
@@ -15,10 +15,10 @@ This guide helps you deploy a Figma plugin that uses Azure AI Foundry agents to 
 - Node.js 18+ 
 - Figma plugin development setup
 
-## Step 1: Azure AI Foundry Agent Setup
+## Step 1: Microsoft Foundry Agent Setup
 
-1. **Create Agent in Azure AI Foundry**
-   - Go to [Azure AI Foundry](https://ai.azure.com)
+1. **Create Agent in Microsoft Foundry**
+   - Go to [Microsoft Foundry](https://ai.azure.com)
    - Create new agent with these instructions:
 
 ```
@@ -64,7 +64,7 @@ cp .env.example .env
 
 **Configure `.env`**:
 ```env
-# Azure AI Foundry Configuration
+# Microsoft Foundry Configuration
 AZURE_AI_PROJECT_ENDPOINT=https://your-project.services.ai.azure.com/api/projects/your-project
 AZURE_AI_AGENT_ID=asst_your_agent_id_here
 AZURE_CLIENT_ID=your_app_registration_client_id

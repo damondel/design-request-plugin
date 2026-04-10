@@ -1,24 +1,24 @@
-# Azure AI Foundry Integration Setup (SDK-Free)
+# Microsoft Foundry Integration Setup (SDK-Free)
 
 ## ✅ No SDK Dependencies Required
 
-This implementation uses **direct REST API calls** to Azure AI Foundry instead of Azure SDKs, avoiding deployment issues.
+This implementation uses **direct REST API calls** to Microsoft Foundry instead of Azure SDKs, avoiding deployment issues.
 
 ## Environment Variables Required
 
-To enable Azure AI Foundry agent integration, configure these environment variables in your Azure Static Web App:
+To enable Microsoft Foundry agent integration, configure these environment variables in your Azure Static Web App:
 
 ### Core Variables
 
 1. **AZURE_AI_PROJECT_ENDPOINT**
-   - Description: The REST API endpoint for your Azure AI Foundry project
+   - Description: The REST API endpoint for your Microsoft Foundry project
    - Example: `https://wmdefault-2478-resource.services.ai.azure.com/api/projects/wmdefault-2478`
-   - Location: Azure AI Foundry Studio → Your Project → Settings → Connection strings
+   - Location: Microsoft Foundry Studio → Your Project → Settings → Connection strings
 
 2. **AZURE_AI_AGENT_ID**
-   - Description: The ID of your specific AI agent in Azure AI Foundry
+   - Description: The ID of your specific AI agent in Microsoft Foundry
    - Example: `asst_qrwJB85AgguLd3cIPJjF86Nv`
-   - Location: Azure AI Foundry Studio → Your Project → Agents → Your Agent → Settings
+   - Location: Microsoft Foundry Studio → Your Project → Agents → Your Agent → Settings
 
 ### Authentication Variables (for REST API calls)
 
@@ -52,7 +52,7 @@ To enable Azure AI Foundry agent integration, configure these environment variab
 
 The system uses a **multi-tier fallback strategy**:
 
-1. **Primary**: Azure AI Foundry via REST API (no SDK dependencies)
+1. **Primary**: Microsoft Foundry via REST API (no SDK dependencies)
 2. **Fallback**: Azure OpenAI with agent-style prompts
 3. **Final Fallback**: Mock responses for testing
 
@@ -82,21 +82,21 @@ AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
 The SDK-free approach uses OAuth 2.0 client credentials flow:
 
 1. Gets access token from `https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token`
-2. Uses token for authenticated REST API calls to Azure AI Foundry
+2. Uses token for authenticated REST API calls to Microsoft Foundry
 3. No Azure SDK dependencies = no deployment issues
 
 ### 3. API Endpoint Behavior
 
 The `/api/analyze-foundry` endpoint will:
 
-1. Try to connect to Azure AI Foundry with the configured credentials
+1. Try to connect to Microsoft Foundry with the configured credentials
 2. Fall back to Azure OpenAI if Foundry is unavailable
 3. Fall back to mock responses if both fail
 
 ## Current Status
 
 - ✅ **SDK-free implementation** using direct REST API calls
-- ✅ Azure AI Foundry integration code is enabled
+- ✅ Microsoft Foundry integration code is enabled
 - ✅ New `/api/analyze-foundry` endpoint created
 - ✅ UI updated to support provider selection
 - ✅ Multi-tier fallback strategy implemented
@@ -106,8 +106,8 @@ The `/api/analyze-foundry` endpoint will:
 ## Next Steps
 
 1. Configure the environment variables in your Azure Static Web App
-2. Test the Azure AI Foundry endpoint
-3. Verify the complete workflow works from Figma → Azure → AI Foundry → Back to Figma
+2. Test the Microsoft Foundry endpoint
+3. Verify the complete workflow works from Figma → Azure → Microsoft Foundry → Back to Figma
 
 ## Advantages of This Approach
 

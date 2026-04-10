@@ -1,18 +1,18 @@
-# 📋 Project Journey: Azure AI Foundry Figma Plugin
+# 📋 Project Journey: Microsoft Foundry Figma Plugin
 
 ## What We Built
-A working Figma plugin that analyzes design elements using Azure AI Foundry agents and provides actionable design suggestions.
+A working Figma plugin that analyzes design elements using Microsoft Foundry agents and provides actionable design suggestions.
 
 ## Final Architecture ✅
 - **Frontend**: Figma plugin (TypeScript) with HTML/JS UI
 - **Backend**: Express.js server on Azure Container Apps  
-- **AI**: Azure AI Foundry agent (REST API, no tools)
-- **Flow**: Figma → Container Apps → Azure AI Foundry → Suggestions → Figma
+- **AI**: Microsoft Foundry agent (REST API, no tools)
+- **Flow**: Figma → Container Apps → Microsoft Foundry → Suggestions → Figma
 
 ## Dead Ends & Failed Approaches ❌
 
 ### 1. Azure SDK Hell (Days 1-3)
-**Tried**: Direct Azure AI Foundry SDK integration
+**Tried**: Direct Microsoft Foundry SDK integration
 **Problems**: 
 - SDK deployment conflicts
 - Dependency version mismatches  
@@ -56,7 +56,7 @@ A working Figma plugin that analyzes design elements using Azure AI Foundry agen
 - **Express.js with CORS**: Full control over headers and responses
 - **TypeScript source editing**: Proper development workflow
 - **Agent with no tools**: Direct text responses only
-- **REST API approach**: Simpler than SDK integration
+- **REST API approach**: Simpler than Microsoft Foundry SDK integration
 
 ### Key Success Factors
 1. **Container Apps deployment**: Fast, reliable, auto-scaling
@@ -87,7 +87,7 @@ A working Figma plugin that analyzes design elements using Azure AI Foundry agen
 2. **Plugin extracts data** (types, sizes, colors, text)
 3. **Main thread sends** to Container Apps API
 4. **Express server** authenticates with Azure
-5. **REST API call** to Azure AI Foundry agent  
+5. **REST API call** to Microsoft Foundry agent  
 6. **Agent analyzes** and responds with text suggestions
 7. **Server parses** response into structured suggestions
 8. **Plugin displays** actionable recommendations
